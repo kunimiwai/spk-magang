@@ -1,6 +1,24 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
 import api from '../services/api'
+import { useAuth } from '../auth/useAuth'
+import { AppLayout } from '../components/layout/AppLayout'
+import {
+  PageContainer,
+  PageHeader,
+} from '../components/layout/PageContainer'
+import { Badge } from '../components/ui/Badge'
+import { Alert } from '../components/ui/Alert'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../components/ui/Card'
+import { LoadingState } from '../components/ui/States'
+import { buttonClasses } from '../lib/buttonStyles'
 
 type HealthResponse = {
   success: boolean
@@ -14,10 +32,13 @@ type ApiStatus =
   | { state: 'error'; message: string }
 
 export default function HomePage() {
+  const { user, isLoading: authLoading, logout } = useAuth()
+
   const [apiStatus, setApiStatus] = useState<ApiStatus>({
     state: 'loading',
     message: 'Memeriksa koneksi backend...',
   })
+  const [logoutLoading, setLogoutLoading] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -62,36 +83,138 @@ export default function HomePage() {
     }
   }, [])
 
+  async function handleLogout() {
+    setLogoutLoading(true)
+
+    try {
+      await logout()
+    } finally {
+      setLogoutLoading(false)
+    }
+  }
+
   return (
-    <main>
-      <h1>SPK Magang</h1>
+    <AppLayout
+      user={user}
+      authLoading={authLoading}
+      onLogout={handleLogout}
+      logoutLoading={logoutLoading}
+    >
+      <PageContainer>
+        <PageHeader
+          eyebrow="Ruang kerja"
+          title="Ringkasan"
+          description="Pantau status sesi pengguna dan koneksi layanan SPK Magang."
+        />
 
-      <p>Sistem Pendukung Keputusan Rekomendasi Tempat Magang.</p>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <CardTitle>Status backend</CardTitle>
+                  <CardDescription>
+                    Koneksi ke REST API Laravel.
+                  </CardDescription>
+                </div>
 
-      <p>
-        Fondasi aplikasi berhasil disiapkan. Fitur akan dikembangkan
-        berdasarkan alur BPMN dan kebutuhan sistem.
-      </p>
+                {apiStatus.state === 'loading' && (
+                  <Badge variant="neutral">Memeriksa</Badge>
+                )}
+                {apiStatus.state === 'connected' && (
+                  <Badge variant="success" withDot role="status">
+                    Terhubung
+                  </Badge>
+                )}
+                {apiStatus.state === 'error' && (
+                  <Badge variant="danger" withDot role="status">
+                    Gagal
+                  </Badge>
+                )}
+              </div>
+            </CardHeader>
 
-      <section aria-labelledby="api-status-heading">
-        <h2 id="api-status-heading">Status Backend API</h2>
+            <CardContent className="space-y-4">
+              {apiStatus.state === 'loading' && (
+                <LoadingState message={apiStatus.message} />
+              )}
 
-        {apiStatus.state === 'loading' && (
-          <p role="status">{apiStatus.message}</p>
-        )}
+              {apiStatus.state === 'connected' && (
+                <>
+                  <p
+                    role="status"
+                    className="text-sm leading-relaxed text-muted-foreground"
+                  >
+                    {apiStatus.message}
+                  </p>
 
-        {apiStatus.state === 'connected' && (
-          <div>
-            <p role="status">Status: Terhubung</p>
-            <p>Pesan: {apiStatus.message}</p>
-            <p>Service: {apiStatus.service}</p>
-          </div>
-        )}
+                  <dl className="grid gap-2 text-sm sm:grid-cols-[6rem_1fr] sm:items-center">
+                    <dt className="text-muted-foreground">Service</dt>
+                    <dd>
+                      <Badge variant="info" className="font-mono">
+                        {apiStatus.service}
+                      </Badge>
+                    </dd>
+                  </dl>
+                </>
+              )}
 
-        {apiStatus.state === 'error' && (
-          <p role="alert">Status: Gagal terhubung. {apiStatus.message}</p>
-        )}
-      </section>
-    </main>
+              {apiStatus.state === 'error' && (
+                <Alert variant="danger" title="Gagal terhubung">
+                  {apiStatus.message}
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Akun pengguna</CardTitle>
+              <CardDescription>
+                Informasi sesi aktif berdasarkan token Bearer.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              {authLoading ? (
+                <LoadingState message="Memeriksa sesi pengguna..." />
+              ) : user ? (
+                <dl className="grid gap-3 text-sm sm:grid-cols-[6rem_1fr]">
+                  <dt className="text-muted-foreground">Nama</dt>
+                  <dd className="break-words font-medium text-foreground">
+                    {user.name}
+                  </dd>
+
+                  <dt className="text-muted-foreground">Email</dt>
+                  <dd className="break-words text-foreground">
+                    {user.email}
+                  </dd>
+
+                  <dt className="text-muted-foreground">Role</dt>
+                  <dd>
+                    <Badge variant="neutral" className="font-mono">
+                      {user.role}
+                    </Badge>
+                  </dd>
+                </dl>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    Anda belum masuk. Masuk menggunakan akun yang terdaftar
+                    untuk melihat informasi sesi.
+                  </p>
+                  <Link
+                    to="/login"
+                    className={buttonClasses({ size: 'sm' })}
+                  >
+                    Masuk
+                  </Link>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </PageContainer>
+    </AppLayout>
   )
 }

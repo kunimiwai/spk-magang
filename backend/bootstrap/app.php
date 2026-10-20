@@ -14,6 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // API tidak memiliki route login web; null memicu 401 JSON dari exception handler.
+        $middleware->redirectGuestsTo(
+            fn (Request $request) => $request->is('api/*') ? null : route('login'),
+        );
+
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
         ]);
