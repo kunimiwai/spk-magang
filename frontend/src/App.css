@@ -1,0 +1,21 @@
+#root {
+  min-height: 100vh;
+}
+
+main {
+  width: min(100% - 2rem, 1120px);
+  margin: 0 auto;
+  padding: 4rem 0;
+}
+
+h1 {
+  margin: 0 0 1rem;
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.15;
+}
+
+p {
+  max-width: 720px;
+  color: #475569;
+  line-height: 1.7;
+}
