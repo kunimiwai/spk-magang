@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { LogOut, Menu } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { buttonClasses } from '../../lib/buttonStyles'
+import { getRoleLabel } from '../../lib/roleLabels'
 import { Brand } from './Brand'
 
 export type HeaderUser = {
@@ -66,7 +67,7 @@ export function AppHeader({
                   {user.name}
                 </p>
                 <p className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
-                  {user.role}
+                  {getRoleLabel(user.role)}
                 </p>
               </div>
 

@@ -19,6 +19,7 @@ import {
 } from '../components/ui/Card'
 import { LoadingState } from '../components/ui/States'
 import { buttonClasses } from '../lib/buttonStyles'
+import { getRoleLabel } from '../lib/roleLabels'
 
 type HealthResponse = {
   success: boolean
@@ -193,7 +194,7 @@ export default function HomePage() {
                   <dt className="text-muted-foreground">Role</dt>
                   <dd>
                     <Badge variant="neutral" className="font-mono">
-                      {user.role}
+                      {getRoleLabel(user.role)}
                     </Badge>
                   </dd>
                 </dl>

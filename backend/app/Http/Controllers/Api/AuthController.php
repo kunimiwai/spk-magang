@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,12 +34,7 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Login berhasil.',
             'data' => [
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                ],
+                'user' => $this->userPayload($user),
                 'token' => $token,
                 'token_type' => 'Bearer',
             ],
@@ -50,7 +46,7 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'user' => $request->user(),
+                'user' => $this->userPayload($request->user()),
             ],
         ]);
     }
@@ -63,5 +59,20 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Logout berhasil.',
         ]);
+    }
+
+    /**
+     * Keep the login and profile responses on the same whitelisted contract.
+     *
+     * @return array{id: int, name: string, email: string, role: string}
+     */
+    private function userPayload(User $user): array
+    {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+        ];
     }
 }

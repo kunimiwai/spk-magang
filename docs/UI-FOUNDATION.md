@@ -102,6 +102,25 @@ Aturan pemakaian:
 - `PageContainer` membatasi lebar konten (maksimal 72rem) dan memberi padding
   responsif.
 
+## Label peran
+
+- `src/lib/roleLabels.ts` adalah satu sumber label untuk role yang sudah
+  dikonfirmasi: `admin`, `prodi`, `mahasiswa`, dan `dpm`.
+- D-001 menetapkan Admin dan Prodi sebagai role terpisah; D-002 menetapkan DPM
+  sebagai Dosen Pembimbing Magang.
+- Mitra tidak memiliki akun aplikasi (D-003), sehingga tidak ada label role
+  mitra pada antarmuka pengguna.
+- Role yang tidak dikenal ditampilkan apa adanya, bukan dipetakan ke role lain.
+
+## Batas otorisasi frontend
+
+- Navigasi dan tombol berbasis role belum ditambahkan karena matriks izin
+  seluruh role masih menunggu OD-001–OD-003.
+- Menyembunyikan menu atau tombol bukan kontrol keamanan. Setiap endpoint
+  harus tetap divalidasi di backend.
+- Halaman yang tersedia saat ini hanya membutuhkan sesi terautentikasi, bukan
+  role bisnis tertentu.
+
 ## Keterbatasan
 
 - Verifikasi visual di browser belum dilakukan pada tahap ini.
@@ -109,3 +128,5 @@ Aturan pemakaian:
   merupakan audit aksesibilitas penuh.
 - `src/App.css` masih ada tetapi tidak diimpor; belum dihapus agar perubahan
   tetap minimal.
+- Belum ada test runner frontend; verifikasi saat ini berupa ESLint dan build
+  produksi.

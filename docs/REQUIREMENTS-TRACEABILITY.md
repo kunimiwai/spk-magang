@@ -365,3 +365,42 @@ Kebutuhan berikut tidak boleh diimplementasikan sebelum keputusan tersedia:
 - Hanya 7 baris yang berstatus **DIKONFIRMASI** karena terkait langsung dengan D-001–D-004: ACT-02, ACT-03, ACT-04, ACT-06, ACT-07, FR-AUTH-06, dan SCOPE-01.
 - Status BPMN tidak diubah menjadi status keputusan. Kebutuhan lain tetap terbuka sesuai kolom **Status keputusan**.
 - Jika BPMN atau keputusan pemilik produk diperbarui, dokumen ini dan `docs/PRD.md` harus disinkronkan ulang.
+
+---
+
+## 19. Lampiran status implementasi teknis
+
+Bagian ini **bukan status keputusan** dan tidak mengubah tabel di atas.
+Bagian ini hanya mencatat apa yang benar-benar ada di repository per
+20 Oktober 2026, agar implementasi tidak disalahartikan sebagai konfirmasi
+kebutuhan produk.
+
+| Kebutuhan | Implementasi aktual | Verifikasi | Catatan |
+|---|---|---|---|
+| FR-AUTH-01 | Endpoint login, form login, dan penyimpanan token Bearer | PHPUnit, ESLint, build | Mahasiswa belum tentu boleh registrasi; OD-005 tetap terbuka |
+| FR-AUTH-02 | Login teknis memakai email/password untuk semua user | PHPUnit | Mekanisme login Admin/Prodi/DPM tetap menunggu OD-004 |
+| FR-AUTH-03 | Endpoint logout dan tombol logout | PHPUnit, build | Status kebutuhan logout tetap BELUM DIPUTUSKAN (OD-006) |
+| FR-AUTH-04 | Tidak diimplementasikan | — | Registrasi menunggu OD-005 |
+| FR-AUTH-05 | Middleware `role` untuk `admin`, `mahasiswa`, dan `dpm` | PHPUnit | Matriks izin lengkap belum ada; OD-001–OD-003 |
+| FR-AUTH-06 | Sengaja tidak diimplementasikan | — | D-003: mitra tanpa akun |
+| FR-AUTH-07 | Halaman profil teknis menampilkan id, nama, email, role | Build | Status profil sebagai MVP tetap BELUM DIPUTUSKAN (OD-006) |
+| FR-AUTH-08 | Tidak diimplementasikan | — | Pengelolaan pengguna menunggu OD-030 |
+| FR-AUTH-09 | Tidak diimplementasikan | — | SSO tidak diputuskan |
+| FR-MIT-01–FR-MIT-05 | Tidak diimplementasikan | — | Data/atribut/kewenangan mitra belum diputuskan |
+| FR-DATA-01 | Tidak diimplementasikan | — | Menunggu OD-005/OD-030 |
+| FR-PREF-01–FR-GRADE-05 | Tidak diimplementasikan | — | Peminatan, nilai, dan validasi belum diputuskan |
+| FR-ALG-01–FR-ALG-11 | Tidak diimplementasikan | — | Folder `algorithm/` masih kosong; OD-009–OD-015 |
+| FR-APP-01–FR-APP-15 | Tidak diimplementasikan | — | State machine dan dokumen belum diputuskan |
+| FR-MITRA-01–FR-MITRA-05 | Tidak diimplementasikan | — | Komunikasi email/surat belum diputuskan |
+| FR-DPM-01–FR-DPM-08 | Tidak diimplementasikan | — | Penunjukan dan kewenangan DPM belum diputuskan |
+| FR-STATUS-01–FR-STATUS-02 | Tidak diimplementasikan | — | Status hanya Diterima/Ditolak yang eksplisit |
+| FR-NOTIF-01–FR-NOTIF-03 | Tidak diimplementasikan | — | Kanal dan pemicu belum diputuskan |
+| FR-REPORT-01, FR-INTEG-01 | Tidak diimplementasikan | — | Belum diputuskan |
+| FR-UI-01–FR-UI-04 | Shell UI, login, ringkasan, dan profil tersedia | Build | Halaman bisnis dan upload dokumen belum ada |
+| FR-API-01 | REST API frontend–backend untuk health dan auth | PHPUnit, build | Kontrak modul bisnis belum ada |
+| FR-API-02–FR-API-03 | Tidak diimplementasikan | — | Kontrak algorithm service belum diputuskan |
+
+Database saat ini hanya memuat tabel autentikasi dan tabel pendukung Laravel.
+Tidak ada tabel mahasiswa, mitra, kriteria, pengajuan, dokumen, atau DPM.
+Seeder tidak membuat akun default; akun uji harus dibuat secara eksplisit untuk
+lingkungan lokal.
