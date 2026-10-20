@@ -35,6 +35,30 @@ class AuthenticationTest extends TestCase
             ]);
     }
 
+    public function test_profile_returns_only_the_whitelisted_user_fields(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Mahasiswa Test',
+            'email' => 'mahasiswa@example.com',
+            'role' => 'mahasiswa',
+        ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson('/api/auth/me')
+            ->assertOk()
+            ->assertExactJson([
+                'success' => true,
+                'data' => [
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => 'Mahasiswa Test',
+                        'email' => 'mahasiswa@example.com',
+                        'role' => 'mahasiswa',
+                    ],
+                ],
+            ]);
+    }
+
     public function test_login_fails_with_invalid_password(): void
     {
         User::factory()->create([
@@ -114,5 +138,26 @@ class AuthenticationTest extends TestCase
         $this->withToken($token)
             ->getJson('/api/auth/me')
             ->assertUnauthorized();
+    }
+
+    public function test_login_is_rate_limited_after_five_failed_attempts(): void
+    {
+        User::factory()->create([
+            'email' => 'mahasiswa@example.com',
+            'password' => 'Password123!',
+            'role' => 'mahasiswa',
+        ]);
+
+        for ($attempt = 1; $attempt <= 5; $attempt++) {
+            $this->postJson('/api/auth/login', [
+                'email' => 'mahasiswa@example.com',
+                'password' => 'wrong-password',
+            ])->assertUnprocessable();
+        }
+
+        $this->postJson('/api/auth/login', [
+            'email' => 'mahasiswa@example.com',
+            'password' => 'wrong-password',
+        ])->assertStatus(429);
     }
 }

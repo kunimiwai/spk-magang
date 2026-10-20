@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PartnerController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -28,6 +29,8 @@ Route::middleware('auth:sanctum')->group(function () {
                 'role' => $request->user()->role,
             ]);
         });
+
+        Route::apiResource('partners', PartnerController::class);
     });
 
     Route::middleware('role:mahasiswa')->prefix('mahasiswa')->group(function () {

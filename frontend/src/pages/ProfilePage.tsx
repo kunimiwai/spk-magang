@@ -18,16 +18,7 @@ import {
 } from '../components/ui/Card'
 import { EmptyState, LoadingState } from '../components/ui/States'
 import { buttonClasses } from '../lib/buttonStyles'
-
-const roleLabels: Record<string, string> = {
-  admin: 'Admin',
-  mahasiswa: 'Mahasiswa',
-  dpm: 'DPM',
-}
-
-function getRoleLabel(role: string): string {
-  return roleLabels[role] ?? role
-}
+import { getRoleLabel } from '../lib/roleLabels'
 
 function getInitials(name: string): string {
   const initials = name
