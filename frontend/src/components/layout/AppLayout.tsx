@@ -37,6 +37,7 @@ export function AppLayout({
           mobileOpen={mobileNavOpen}
           onClose={closeMobileNav}
           triggerRef={menuButtonRef}
+          role={user?.role}
         />
 
         <div className="flex min-w-0 flex-1 flex-col">

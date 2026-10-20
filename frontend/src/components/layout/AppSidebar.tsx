@@ -1,19 +1,32 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { LayoutDashboard, UserRound, X } from 'lucide-react'
+import { Building2, LayoutDashboard, UserRound, X } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Brand } from './Brand'
 
-const navItems = [
-  { to: '/', label: 'Beranda', icon: LayoutDashboard, end: true },
-  { to: '/profil', label: 'Profil', icon: UserRound, end: false },
-] as const
-
 type SidebarNavProps = {
   onNavigate?: () => void
+  role?: string
 }
 
-function SidebarNav({ onNavigate }: SidebarNavProps) {
+function SidebarNav({ onNavigate, role }: SidebarNavProps) {
+  // Backend partner endpoints are currently admin-only. Prodi authority is
+  // still open (OD-001–OD-003), so it is not exposed here.
+  const navItems = [
+    { to: '/', label: 'Beranda', icon: LayoutDashboard, end: true },
+    ...(role === 'admin'
+      ? [
+          {
+            to: '/mitra',
+            label: 'Mitra Magang',
+            icon: Building2,
+            end: false,
+          },
+        ]
+      : []),
+    { to: '/profil', label: 'Profil', icon: UserRound, end: false },
+  ]
+
   return (
     <nav aria-label="Navigasi utama" className="flex-1 space-y-1 p-3">
       <p className="px-3 pb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
@@ -58,12 +71,14 @@ type AppSidebarProps = {
   mobileOpen: boolean
   onClose: () => void
   triggerRef: RefObject<HTMLButtonElement | null>
+  role?: string
 }
 
 export function AppSidebar({
   mobileOpen,
   onClose,
   triggerRef,
+  role,
 }: AppSidebarProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
@@ -130,7 +145,7 @@ export function AppSidebar({
           </Link>
         </div>
 
-        <SidebarNav />
+        <SidebarNav role={role} />
       </aside>
 
       {mobileOpen && (
@@ -169,7 +184,7 @@ export function AppSidebar({
               </button>
             </div>
 
-            <SidebarNav onNavigate={onClose} />
+            <SidebarNav onNavigate={onClose} role={role} />
           </div>
         </div>
       )}
