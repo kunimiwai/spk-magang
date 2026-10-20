@@ -53,7 +53,28 @@ class AuthenticationTest extends TestCase
 
     public function test_profile_requires_authentication(): void
     {
-        $this->getJson('/api/auth/me')->assertUnauthorized();
+        $this->getJson('/api/auth/me')
+            ->assertUnauthorized()
+            ->assertHeader('Content-Type', 'application/json')
+            ->assertJson(['message' => 'Unauthenticated.']);
+    }
+
+    public function test_profile_requires_authentication_without_accept_header(): void
+    {
+        // Simulasikan klien yang tidak mengirim header Accept sama sekali.
+        $this->get('/api/auth/me')
+            ->assertUnauthorized()
+            ->assertHeader('Content-Type', 'application/json')
+            ->assertJson(['message' => 'Unauthenticated.']);
+    }
+
+    public function test_profile_rejects_invalid_token_with_json_accept_header(): void
+    {
+        $this->withToken('invalid-token')
+            ->getJson('/api/auth/me')
+            ->assertUnauthorized()
+            ->assertHeader('Content-Type', 'application/json')
+            ->assertJson(['message' => 'Unauthenticated.']);
     }
 
     public function test_mahasiswa_cannot_access_admin_endpoint(): void
