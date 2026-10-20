@@ -1,5 +1,6 @@
 
 import axios from 'axios'
+import { emitUnauthorized } from './authEvents'
 
 const TOKEN_KEY = 'spk_magang_token'
 
@@ -37,11 +38,23 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
-    if (
-      axios.isAxiosError(error) &&
-      error.response?.status === 401
-    ) {
-      clearAuthToken()
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      const requestUrl = error.config?.url ?? ''
+      const isLoginRequest = requestUrl.includes('/auth/login')
+
+      // Login failures are handled by the login form; they must not trigger
+      // a global session-expired redirect.
+      if (!isLoginRequest) {
+        const hadToken = Boolean(getAuthToken())
+
+        clearAuthToken()
+
+        // Only notify when a session actually existed. This prevents repeated
+        // notifications and redirect loops when several requests fail at once.
+        if (hadToken) {
+          emitUnauthorized()
+        }
+      }
     }
 
     return Promise.reject(error)
