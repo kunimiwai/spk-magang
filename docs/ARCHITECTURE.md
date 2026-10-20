@@ -65,11 +65,12 @@ Frontend                         Backend (Laravel + Sanctum)
 |---|---|---|
 | Frontend shell | Terimplementasi dan terverifikasi | Layout, navigasi, halaman login, ringkasan, profil; `npm run lint` dan `npm run build` lulus |
 | Frontend auth | Terimplementasi dan terverifikasi | Pemulihan sesi, redirect, penanganan 401, logout |
+| Frontend mitra admin | Terimplementasi dan terverifikasi | Halaman `/mitra` terhubung ke API CRUD; pagination, validasi, dialog, dan state lengkap; lolos lint/build serta E2E browser desktop/tablet/ponsel |
 | Backend auth | Terimplementasi dan terverifikasi | Sanctum, rate limit, test fitur |
 | Backend role middleware | Terimplementasi sebagian | `admin`, `mahasiswa`, `dpm`; matriks izin belum final (OD-001–OD-003) |
-| Database | Terimplementasi sebagian | Tabel `users`, token Sanctum, cache, jobs; tabel bisnis belum ada |
+| Database | Terimplementasi sebagian | Tabel `users`, token Sanctum, cache, jobs, dan `partners`; tabel bisnis lain belum ada |
 | Algorithm Service | Belum diimplementasikan | Folder `algorithm/` masih kosong |
-| Modul bisnis | Belum diimplementasikan | Terblokir OD-005–OD-026 |
+| Modul bisnis | Sebagian | CRUD mitra admin tersedia; modul lain belum diimplementasikan dan keputusan OD-005–OD-026 tetap terbuka |
 | Notifikasi/laporan/integrasi | Belum diimplementasikan | Terblokir OD-029–OD-031 |
 
 ## Keputusan arsitektur yang masih terbuka
@@ -86,8 +87,14 @@ Keputusan tersebut belum diambil. Lihat `docs/PRD.md` Bagian 8 dan
 ## Catatan keamanan
 
 - File `.env` tidak di-commit; nilai rahasia tidak boleh masuk repository.
-- Token Bearer tidak memakai cookie, sehingga CORS tidak mengaktifkan
-  kredensial.
+- CORS hanya mengizinkan origin frontend yang tercantum di
+  `CORS_ALLOWED_ORIGINS` (`backend/config/cors.php`). Wildcard origin tidak
+  dipakai, dan `supports_credentials` tetap `false` karena API memakai Bearer
+  token.
+- Token Bearer tidak memakai cookie untuk request API, sehingga CORS tidak
+  mengaktifkan kredensial. Cookie sesi hanya dipakai sementara saat login.
+- Deployment produksi wajib memakai HTTPS, `APP_DEBUG=false`, cookie sesi
+  `Secure`, dan origin CORS yang eksplisit.
 - Masa berlaku token, audit trail, retensi data, dan kebijakan perlindungan
   data belum ditetapkan (OD-027, OD-028).
 - Mitra tidak memiliki akun aplikasi sesuai D-003; tidak ada autentikasi mitra

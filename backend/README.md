@@ -14,6 +14,7 @@ Laravel Sanctum dengan token Bearer.
 ```bash
 cp .env.example .env
 # Sesuaikan DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, dan DB_PASSWORD.
+# Pastikan CORS_ALLOWED_ORIGINS memuat origin frontend yang dipakai.
 # Jangan commit file .env.
 composer install
 php artisan key:generate
@@ -33,6 +34,11 @@ pembuatan akun masih menunggu OD-004 dan OD-005 pada `docs/PRD.md`.
 | GET | `/api/auth/me` | `auth:sanctum` |
 | POST | `/api/auth/logout` | `auth:sanctum` |
 | GET | `/api/admin/access-check` | `auth:sanctum` + role `admin` |
+| GET | `/api/admin/partners` | `auth:sanctum` + role `admin` |
+| POST | `/api/admin/partners` | `auth:sanctum` + role `admin` |
+| GET | `/api/admin/partners/{partner}` | `auth:sanctum` + role `admin` |
+| PUT/PATCH | `/api/admin/partners/{partner}` | `auth:sanctum` + role `admin` |
+| DELETE | `/api/admin/partners/{partner}` | `auth:sanctum` + role `admin` |
 | GET | `/api/mahasiswa/access-check` | `auth:sanctum` + role `mahasiswa` |
 | GET | `/api/dpm/access-check` | `auth:sanctum` + role `dpm` |
 
@@ -49,9 +55,17 @@ php artisan test --compact
 Test menggunakan SQLite in-memory sesuai `phpunit.xml`, sehingga tidak
 mengubah database PostgreSQL pengembangan.
 
+CORS hanya mengizinkan origin dari `CORS_ALLOWED_ORIGINS`; jangan memakai
+wildcard origin. Feature test CORS mencakup origin yang diizinkan, preflight,
+dan origin yang ditolak.
+
 ## Status
 
-Hanya autentikasi, otorisasi dasar, dan health check yang tersedia. Modul
-mahasiswa, mitra, pengajuan, dokumen, DPM, K-Means, SAW, dan rekomendasi belum
-diimplementasikan karena keputusan produk pada `docs/PRD.md` Bagian 8 masih
-terbuka.
+Autentikasi, otorisasi dasar, health check, dan CRUD mitra magang tersedia.
+CRUD mitra memakai atribut minimum (`name`, `address`, `contact`, `email`,
+`description`) karena atribut penilaian, pemetaan peminatan, status, kuota, dan
+kewenangan Prodi masih menunggu keputusan produk pada `docs/PRD.md` Bagian 8.
+Modul kriteria penilaian sudah diaudit tetapi belum diimplementasikan karena
+daftar kriteria, bobot, benefit/cost, skala, dan normalisasi belum ditetapkan.
+Rincian ada di `docs/CRITERIA-GAP-ANALYSIS.md`. Modul mahasiswa, pengajuan,
+dokumen, DPM, K-Means, SAW, dan rekomendasi belum diimplementasikan.

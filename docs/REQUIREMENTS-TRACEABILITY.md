@@ -386,7 +386,9 @@ kebutuhan produk.
 | FR-AUTH-07 | Halaman profil teknis menampilkan id, nama, email, role | Build | Status profil sebagai MVP tetap BELUM DIPUTUSKAN (OD-006) |
 | FR-AUTH-08 | Tidak diimplementasikan | — | Pengelolaan pengguna menunggu OD-030 |
 | FR-AUTH-09 | Tidak diimplementasikan | — | SSO tidak diputuskan |
-| FR-MIT-01–FR-MIT-05 | Tidak diimplementasikan | — | Data/atribut/kewenangan mitra belum diputuskan |
+| FR-MIT-01 | CRUD mitra admin melalui `/api/admin/partners` dan UI `/mitra` | PHPUnit, Pint, migration PostgreSQL, ESLint, build, E2E browser | UI dibatasi role admin; kewenangan Prodi dan aturan lanjutan menunggu OD-001–OD-003. Bukti E2E ada di `docs/VERIFICATION.md` |
+| FR-MIT-02 | Audit selesai; belum diimplementasikan | — | Menunggu OD-012, OD-013, OD-015, dan keputusan kewenangan Admin/Prodi; lihat `docs/CRITERIA-GAP-ANALYSIS.md` |
+| FR-MIT-03–FR-MIT-05 | Tidak diimplementasikan | — | Atribut penilaian, peminatan, kuota, dan status mitra belum diputuskan |
 | FR-DATA-01 | Tidak diimplementasikan | — | Menunggu OD-005/OD-030 |
 | FR-PREF-01–FR-GRADE-05 | Tidak diimplementasikan | — | Peminatan, nilai, dan validasi belum diputuskan |
 | FR-ALG-01–FR-ALG-11 | Tidak diimplementasikan | — | Folder `algorithm/` masih kosong; OD-009–OD-015 |
@@ -396,11 +398,14 @@ kebutuhan produk.
 | FR-STATUS-01–FR-STATUS-02 | Tidak diimplementasikan | — | Status hanya Diterima/Ditolak yang eksplisit |
 | FR-NOTIF-01–FR-NOTIF-03 | Tidak diimplementasikan | — | Kanal dan pemicu belum diputuskan |
 | FR-REPORT-01, FR-INTEG-01 | Tidak diimplementasikan | — | Belum diputuskan |
-| FR-UI-01–FR-UI-04 | Shell UI, login, ringkasan, dan profil tersedia | Build | Halaman bisnis dan upload dokumen belum ada |
-| FR-API-01 | REST API frontend–backend untuk health dan auth | PHPUnit, build | Kontrak modul bisnis belum ada |
+| FR-UI-01–FR-UI-04 | Shell UI, login, ringkasan, profil, dan halaman admin mitra tersedia | Build, E2E browser | Dashboard rekomendasi dan upload dokumen belum ada |
+| FR-API-01 | REST API frontend–backend untuk health, auth, dan CRUD mitra | PHPUnit, build, E2E browser | Kontrak modul bisnis lain belum ada |
 | FR-API-02–FR-API-03 | Tidak diimplementasikan | — | Kontrak algorithm service belum diputuskan |
 
-Database saat ini hanya memuat tabel autentikasi dan tabel pendukung Laravel.
-Tidak ada tabel mahasiswa, mitra, kriteria, pengajuan, dokumen, atau DPM.
+Database saat ini memuat tabel autentikasi dan pendukung Laravel serta tabel
+`partners` untuk CRUD mitra. Tidak ada tabel mahasiswa, kriteria, pengajuan,
+dokumen, atau DPM. Tabel `partners` hanya memuat atribut minimum; atribut
+penilaian, peminatan, dan status belum ditambahkan karena keputusan produk
+belum tersedia.
 Seeder tidak membuat akun default; akun uji harus dibuat secara eksplisit untuk
 lingkungan lokal.
