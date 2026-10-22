@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Partner extends Model
 {
@@ -19,4 +20,14 @@ class Partner extends Model
         'email',
         'description',
     ];
+
+    public function criterionScores(): HasMany
+    {
+        return $this->hasMany(CriterionScore::class);
+    }
+
+    public function internshipApplications(): HasMany
+    {
+        return $this->hasMany(InternshipApplication::class);
+    }
 }

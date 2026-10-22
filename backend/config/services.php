@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'algorithm' => [
+        // Jangan menaruh URL layanan di controller atau kode frontend.
+        'url' => env('ALGORITHM_SERVICE_URL'),
+        'timeout' => env('ALGORITHM_SERVICE_TIMEOUT', 5),
+        'connect_timeout' => env('ALGORITHM_SERVICE_CONNECT_TIMEOUT', 3),
+    ],
+
 ];
