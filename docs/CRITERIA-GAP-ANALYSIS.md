@@ -1,8 +1,9 @@
 # Gap Analysis — Modul Kriteria Penilaian SPK Magang
 
-**Tanggal:** 20 Oktober 2026
-**Status:** Audit selesai; implementasi **ditunda (NO-GO)** sampai keputusan produk tersedia.
+**Tanggal:** 20 Oktober 2026 (diperbarui 21 Oktober 2026)
+**Status:** Audit selesai. Struktur, API, dan UI kriteria serta nilai mitra sudah tersedia; **data kriteria/bobot resmi tetap NO-GO** sampai OD-012–OD-015 disetujui.
 **Ruang lingkup:** master kriteria penilaian SAW di backend. Tidak mencakup algoritma SAW/K-Means, nilai mitra, mahasiswa, pengajuan, atau frontend.
+**Status terkini:** lihat `docs/REQUIREMENTS-TRACEABILITY.md` §19–§20.
 
 ---
 
@@ -184,8 +185,9 @@ mengunci skema dan validasi yang tidak dapat dipertanggungjawabkan.
 |---|---|
 | Audit dokumen | Selesai |
 | Audit Mitra Magang | Selesai; tidak ada bug terkait |
-| Migration kriteria | **Tidak dibuat** |
-| Model/Form Request/Controller/Route kriteria | **Tidak dibuat** |
-| Feature test kriteria | **Tidak dibuat** |
-| Algoritma SAW/K-Means | Tidak dikerjakan (di luar scope) |
-| Kesimpulan | **NO-GO** sampai keputusan pada Bagian 7 disetujui |
+| Migration kriteria | Tersedia (`criteria`, `criterion_scores`); bukan data resmi |
+| Model/Form Request/Controller/Route kriteria | Tersedia untuk `admin`/`prodi`; kewenangan rinci menunggu OD-001–OD-003 |
+| Feature test kriteria | Tersedia (CRUD, validasi, otorisasi, unique, cascade) |
+| Algoritma SAW/K-Means | Fungsi generik dan integrasi teknis tersedia; parameter bisnis belum |
+| Data kriteria/bobot resmi | **NO-GO** sampai keputusan pada Bagian 7 disetujui |
+| Kesimpulan | Struktur boleh ada; **ranking produksi tetap nonaktif** sampai OD-007–OD-015 disetujui dan `RECOMMENDATION_ENABLED` diaktifkan secara eksplisit |

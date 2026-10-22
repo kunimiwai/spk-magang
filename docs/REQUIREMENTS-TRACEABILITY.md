@@ -358,7 +358,7 @@ Kebutuhan berikut tidak boleh diimplementasikan sebelum keputusan tersedia:
 
 ## 18. Status dokumen
 
-- Dokumen ini hanya dokumentasi; tidak ada kode aplikasi, database, migration, seeder, dependency, konfigurasi, atau test yang diubah.
+- Bagian 1–17 adalah dokumen traceability dan tidak mengubah status keputusan. §19–§20 mencatat status implementasi teknis serta matriks kesiapan; keduanya bukan keputusan bisnis.
 - PRD rujukan adalah `docs/PRD.md` versi 0.3.
 - D-001–D-004 tercatat sebagai **DIKONFIRMASI**; OD-001–OD-031 tetap terbuka; Q1–Q58 dipertahankan.
 - Traceability memuat 75 kebutuhan fungsional, 9 baris aktor, 13 langkah alur, dan 7 baris NFR/ACC/SCOPE (total 104 baris).
@@ -387,25 +387,114 @@ kebutuhan produk.
 | FR-AUTH-08 | Tidak diimplementasikan | — | Pengelolaan pengguna menunggu OD-030 |
 | FR-AUTH-09 | Tidak diimplementasikan | — | SSO tidak diputuskan |
 | FR-MIT-01 | CRUD mitra admin melalui `/api/admin/partners` dan UI `/mitra` | PHPUnit, Pint, migration PostgreSQL, ESLint, build, E2E browser | UI dibatasi role admin; kewenangan Prodi dan aturan lanjutan menunggu OD-001–OD-003. Bukti E2E ada di `docs/VERIFICATION.md` |
-| FR-MIT-02 | Audit selesai; belum diimplementasikan | — | Menunggu OD-012, OD-013, OD-015, dan keputusan kewenangan Admin/Prodi; lihat `docs/CRITERIA-GAP-ANALYSIS.md` |
-| FR-MIT-03–FR-MIT-05 | Tidak diimplementasikan | — | Atribut penilaian, peminatan, kuota, dan status mitra belum diputuskan |
+| FR-MIT-02 | Struktur `criteria`, CRUD `/api/admin/criteria`, nilai mitra, dan UI `/kriteria` tersedia | PHPUnit, Vitest, build | Daftar kriteria, bobot awal, skala, dan total bobot resmi belum ditetapkan (OD-012/OD-013); kewenangan rinci menunggu OD-001–OD-003 |
+| FR-MIT-03 | Nilai kriteria per mitra tersedia melalui `criterion_scores` dan endpoint admin/prodi | PHPUnit, Vitest | Daftar atribut resmi dan sumber nilainya menunggu OD-009/OD-012 |
+| FR-MIT-04–FR-MIT-05 | Tidak diimplementasikan | — | Pemetaan mitra–peminatan, kuota, dan status mitra belum diputuskan |
 | FR-DATA-01 | Tidak diimplementasikan | — | Menunggu OD-005/OD-030 |
-| FR-PREF-01–FR-GRADE-05 | Tidak diimplementasikan | — | Peminatan, nilai, dan validasi belum diputuskan |
-| FR-ALG-01–FR-ALG-11 | Tidak diimplementasikan | — | Folder `algorithm/` masih kosong; OD-009–OD-015 |
-| FR-APP-01–FR-APP-15 | Tidak diimplementasikan | — | State machine dan dokumen belum diputuskan |
+| FR-PREF-01 | Struktur `student_peminatan`, endpoint profil, dan UI tersedia | PHPUnit, Vitest, build | Penulisan menunggu mode `single`/`multiple` (OD-015); belum ada pemetaan peminatan ke mitra |
+| FR-PREF-02 | Tidak diimplementasikan | — | Perubahan/multi-peminatan menunggu OD-015 |
+| FR-GRADE-01 | Master `courses`, `student_grades`, `GET/PUT /api/mahasiswa/grades`, dan UI nilai milik sendiri | PHPUnit, Vitest, build | Mencatat nilai tanpa menyatakan lulus/tidak lulus; sumber nilai resmi menunggu OD-007 |
+| FR-GRADE-02–FR-GRADE-05 | Sebagian: validasi teknis, isolasi akun, dan status prasyarat belum dikonfigurasi | PHPUnit, Vitest | Daftar prasyarat, skala, ambang, sumber, histori, dan aturan validasi resmi menunggu OD-007/OD-008 |
+| FR-ALG-01–FR-ALG-11 | Sebagian: layanan generik, klien HTTP tervalidasi, pipeline rekomendasi, readiness gate berkategori, dan status `not_ready` | PHPUnit, Python unittest, Vitest, build | Parameter K-Means/SAW, jumlah ranking, dan pemetaan menunggu OD-009–OD-015; aturan prasyarat menunggu OD-007/OD-008. Matriks kesiapan ada di §20 |
+| FR-APP-01–FR-APP-15 | Sebagian: kirim pengajuan, daftar/detail milik sendiri, daftar/detail admin/prodi, keputusan `menunggu` → `diterima`/`ditolak`, serta unggah/unduh surat penerimaan untuk pengajuan diterima | PHPUnit, Vitest, build | Verifikasi/revisi dokumen, notifikasi, penerusan ke mitra, reversal, batas lamaran ganda, dan pengajuan ulang menunggu OD-016–OD-021 |
 | FR-MITRA-01–FR-MITRA-05 | Tidak diimplementasikan | — | Komunikasi email/surat belum diputuskan |
-| FR-DPM-01–FR-DPM-08 | Tidak diimplementasikan | — | Penunjukan dan kewenangan DPM belum diputuskan |
-| FR-STATUS-01–FR-STATUS-02 | Tidak diimplementasikan | — | Status hanya Diterima/Ditolak yang eksplisit |
+| FR-DPM-01–FR-DPM-08 | Sebagian: `admin`/`prodi` dapat menetapkan satu akun ber-role `dpm` untuk pengajuan diterima; mahasiswa melihat DPM miliknya | PHPUnit, Vitest, build | Kriteria penugasan, beban, persetujuan, penggantian, bimbingan, dan komunikasi DPM menunggu OD-023–OD-026 |
+| FR-STATUS-01–FR-STATUS-02 | Sebagian: `menunggu`, `diterima`, `ditolak`; transisi hanya `menunggu` → keputusan | PHPUnit, Vitest | Status antara dan reversal menunggu OD-016/OD-021 |
 | FR-NOTIF-01–FR-NOTIF-03 | Tidak diimplementasikan | — | Kanal dan pemicu belum diputuskan |
 | FR-REPORT-01, FR-INTEG-01 | Tidak diimplementasikan | — | Belum diputuskan |
-| FR-UI-01–FR-UI-04 | Shell UI, login, ringkasan, profil, dan halaman admin mitra tersedia | Build, E2E browser | Dashboard rekomendasi dan upload dokumen belum ada |
-| FR-API-01 | REST API frontend–backend untuk health, auth, dan CRUD mitra | PHPUnit, build, E2E browser | Kontrak modul bisnis lain belum ada |
-| FR-API-02–FR-API-03 | Tidak diimplementasikan | — | Kontrak algorithm service belum diputuskan |
+| FR-UI-01–FR-UI-04 | Shell UI, login, ringkasan, profil, halaman admin mitra, nilai akademik, rekomendasi, pengajuan mahasiswa/admin-prodi, unggah/unduh surat, serta penempatan DPM tersedia | Build, E2E browser | Dashboard DPM, verifikasi dokumen, dan revisi belum ada |
+| FR-API-01 | REST API frontend–backend untuk health, auth, CRUD mitra, nilai akademik, rekomendasi, pengajuan, surat penerimaan, dan penempatan DPM | PHPUnit, build, E2E browser | Kontrak modul bisnis lain belum ada |
+| FR-API-02–FR-API-03 | Klien backend–algorithm service dan validasi kontrak request/response tersedia; parameter bisnis tetap kosong | PHPUnit, Python unittest | Kontrak generik sudah ada; isi parameter bisnis menunggu OD-009–OD-015 |
 
-Database saat ini memuat tabel autentikasi dan pendukung Laravel serta tabel
-`partners` untuk CRUD mitra. Tidak ada tabel mahasiswa, kriteria, pengajuan,
-dokumen, atau DPM. Tabel `partners` hanya memuat atribut minimum; atribut
-penilaian, peminatan, dan status belum ditambahkan karena keputusan produk
-belum tersedia.
+Database saat ini memuat tabel autentikasi dan pendukung Laravel, `partners`,
+`criteria`, `criterion_scores`, `student_peminatan`, `courses`,
+`student_grades`, `internship_applications`, `acceptance_letters`, dan
+`dpm_placements`. `internship_applications` hanya memuat status yang dapat
+dipertanggungjawabkan dari BPMN; status antara dan aturan lanjutan belum
+ditambahkan karena keputusan produk belum tersedia. `acceptance_letters`
+menyimpan metadata satu surat per pengajuan diterima dan `dpm_placements`
+merujuk akun `users` ber-role `dpm`; keduanya belum menetapkan kebijakan
+revisi/penggantian.
 Seeder tidak membuat akun default; akun uji harus dibuat secara eksplisit untuk
 lingkungan lokal.
+
+---
+
+## 20. Matriks kesiapan aturan rekomendasi (OD-007–OD-015)
+
+Bagian ini adalah **lampiran teknis**, bukan register keputusan. Sumber
+keputusan bisnis tetap `docs/BUSINESS-DECISION-REGISTER.md`; perubahan status
+keputusan tidak boleh disimpulkan dari tabel di bawah. Matriks ini mencatat
+bagian kode/konfigurasi yang sudah tersedia, data yang masih dibutuhkan, dan
+konsekuensi bila keputusan belum diambil.
+
+### 20.1 Mekanisme readiness
+
+Endpoint `GET /api/mahasiswa/recommendations` tidak pernah memakai nilai
+default yang tidak disetujui. Setiap pemeriksaan mengembalikan `category`:
+
+| Kategori | Arti | Contoh pemeriksaan |
+|---|---|---|
+| `technical` | Validasi teknis konfigurasi/LAYANAN | URL layanan algoritma valid dan dapat dipanggil |
+| `data` | Kelengkapan data yang tersimpan | Mitra tersedia, nilai mitra lengkap, peminatan mahasiswa tersedia |
+| `decision` | Keputusan bisnis/aktivasi yang belum final | Aktivasi eksplisit, prasyarat, kriteria SAW, kebijakan ranking |
+| `analysis` | Konfigurasi analitik/dashboard yang tidak memblokir SAW | Fitur/jumlah/seed K-Means dan label cluster untuk analitik |
+
+Aturan fail-closed yang berlaku:
+
+1. Pemeriksaan kategori `technical`, `data`, dan `decision` harus `ok`; satu
+   pemeriksaan pada kategori tersebut yang `blocked` menghasilkan
+   `status = not_ready`, `ranking = []`, dan `kmeans = null`. Pemeriksaan
+   kategori `analysis` tetap ditampilkan pada `checks`, tetapi tidak memblokir
+   perhitungan SAW (proposal menetapkan label klaster sebagai informasi
+   analitik, bukan filter wajib sebelum SAW).
+2. `RECOMMENDATION_ENABLED` bernilai `false` secara default. Mengaktifkannya
+   adalah kontrol operasional dan tidak menggantikan keputusan OD-007–OD-015.
+3. `recommendation.kmeans.feature_criterion_ids` dan
+   `recommendation.peminatan_cluster_map` sengaja berupa daftar kosong di
+   konfigurasi; tidak ada fallback dari browser, query, atau body request.
+   Nilai kosong hanya menonaktifkan analitik/label klaster, bukan ranking.
+4. `recommendation.ranking.limit` kosong berarti jumlah ranking belum
+   ditetapkan (OD-014) dan ranking tidak dibuat.
+5. Nilai mitra yang hilang tidak dianggap nol. Nilai akademik yang hilang tidak
+   dianggap nol. Mahasiswa hanya dievaluasi dengan peminatan dan nilai milik
+   akun yang sedang login.
+6. Data dari FastAPI divalidasi bentuk, jumlah, indeks, dan nilainya sebelum
+   dipakai; kegagalan layanan menjadi respons aman tanpa stack trace.
+7. Parameter aktual yang dipakai (cluster, seed, ID fitur) dikembalikan pada
+   ringkasan `kmeans` agar hasil dapat ditelusuri.
+
+Konfigurasi terkait: `backend/config/recommendation.php`,
+`backend/config/academic.php`, `backend/config/student.php`, dan
+`backend/config/services.php`. Contoh variabel ada di `backend/.env.example`;
+file `.env` tidak diubah oleh implementasi ini.
+
+### 20.2 Matriks per keputusan
+
+| OD | Keputusan yang diperlukan | Kode/config terdampak | Data yang dibutuhkan | Dampak bila belum ditentukan | Tes yang diperlukan | Status |
+|---|---|---|---|---|---|---|
+| **OD-007** | Sumber nilai resmi (manual/impor/integrasi), skala nilai, dan apakah menyimpan histori atau nilai terbaru | `student_grades`, `StudentGradeService`, `config/academic.php` (`grade.min/max` hanya batas penyimpanan), `UpdateStudentGradesRequest` | Sumber resmi, skala, pemilik data, aturan sinkronisasi/histori | Struktur dan API nilai tersedia, tetapi tidak ada klaim sumber resmi; ranking tetap `not_ready` karena aturan prasyarat kosong | Isolasi nilai per akun, nilai kosong tidak menjadi nol, validasi input, status sumber | **Sebagian** |
+| **OD-008** | Daftar mata kuliah prasyarat, ambang lulus, validasi data, dan penanganan data tidak valid | `AcademicPrerequisiteEvaluator`, `config/academic.php` (`prerequisites.rules`), `StudentGradeService`, `RecommendationService` | Daftar `course_id`, `minimum_score`, kebijakan data tidak valid/kosong | `rules = []` menghasilkan pemeriksaan `prerequisites` blocked dan ranking tidak dibuat | Rules kosong, nilai hilang, nilai nol, di bawah ambang, konfigurasi tidak valid, evaluasi hanya untuk mahasiswa terkait | **Sebagian** |
+| **OD-009** | Atribut K-Means dan preprocessing | `config/recommendation.php` (`kmeans.feature_criterion_ids`), `RecommendationService` (matriks fitur), `AlgorithmService::kmeans`, `algorithm/spk_algorithm/kmeans.py` | Daftar atribut resmi, tipe/skala, transformasi, penanganan nilai kosong | Daftar kosong menghasilkan pemeriksaan `kmeans_configuration` berkategori `analysis` berstatus blocked; analitik klaster tidak dihitung, tetapi ranking SAW tetap dapat berjalan bila gate lain terpenuhi | Daftar kosong, ID kriteria tidak dikenal/duplikat, matriks hanya dari kriteria terpilih | **Sebagian (analitik)** |
+| **OD-010** | Jumlah cluster dan cara menentukannya | `config/recommendation.php` (`kmeans.cluster_count`, `random_seed`), `AlgorithmService::kmeans`, `kmeans.py` | Jumlah/aturan cluster, dasar penentuan, seed reproducible | `cluster_count` null menonaktifkan analitik klaster (kategori `analysis`), bukan ranking; cluster melebihi jumlah mitra ditolak untuk analitik | Null, nilai tidak valid, cluster > jumlah mitra, seed diteruskan ke layanan | **Sebagian (analitik)** |
+| **OD-011** | Objek yang dikelompokkan, tujuan cluster, dan pemanfaatan hasil | `config/recommendation.php` (`peminatan_cluster_map`), `RecommendationService` (K-Means analitik + SAW seluruh mitra), `AdminAnalyticsController` | Target clustering (mitra/mahasiswa/keduanya), arti cluster, aturan hitung ulang | Label cluster tidak menyaring kandidat SAW; pemetaan kosong hanya membuat pemeriksaan `analysis` blocked dan analitik tidak berlabel. Proposal menetapkan label klaster sebagai informasi analitik, bukan filter wajib | Label cluster tidak memfilter kandidat, pemetaan kosong, indeks cluster di luar rentang, distribusi analitik, himpunan mitra kosong | **Sebagian (analitik; keputusan final terbuka)** |
+| **OD-012** | Daftar kriteria SAW resmi, bobot, skala/total bobot, penanggung jawab, dan aturan perubahan | Tabel `criteria`, `CriterionController`, `Store/UpdateCriterionRequest`, `CriterionScoreController`, `RecommendationService` | Daftar kriteria, bobot awal, skala (0–1/0–100), total wajib, versioning/audit | Master dan UI tersedia, tetapi tidak ada daftar/bobot resmi; `RECOMMENDATION_ENABLED=false` menjaga ranking tetap nonaktif | Kriteria kosong, bobot negatif/tidak finite, total bobot nol, validasi CRUD, aktivasi eksplisit | **Sebagian** |
+| **OD-013** | Tipe benefit/cost per kriteria, rumus normalisasi, skala nilai, dan perilaku nilai kosong/nol | `CriterionType`, `algorithm/spk_algorithm/saw.py`, `RecommendationService` (validasi kolom), `UpdatePartnerScoresRequest` | Tipe per kriteria, skala nilai, kebijakan nol/kosong, rumus resmi | Normalisasi generik tersedia; nilai cost nol dan benefit semua nol diblokir, tetapi kebijakan resmi belum ditetapkan | Cost bernilai nol, benefit semua nol, nilai hilang, nilai negatif, respons SAW tidak valid | **Sebagian** |
+| **OD-014** | Jumlah rekomendasi, tie-break, serta perilaku hasil kosong/kegagalan | `config/recommendation.php` (`ranking.limit`), `algorithm/spk_algorithm/saw.py` (competition ranking), `RecommendationService` (slice ranking), `RecommendationController` (503) | Top-N atau semua, aturan tie-break, kebijakan hasil kosong dan kegagalan | `ranking.limit` kosong menghasilkan `ranking_policy` blocked; tie-break masih memakai perilaku deterministik generik dan belum disetujui | Limit diterapkan, limit tidak valid, layanan gagal, respons tidak valid | **Sebagian** |
+| **OD-015** | Kardinalitas peminatan, aturan perubahan, cakupan persistensi, dan pemetaan peminatan ke mitra | `student_peminatan`, `StudentProfileService`, `StudentPeminatanResolver`, `config/student.php`, `config/recommendation.php` (`peminatan_cluster_map`) | Satu/lebih dari satu, aturan perubahan, per mahasiswa/pengajuan, pemetaan mitra | Mode kosong membuat `PUT /api/mahasiswa/profile` 409; peminatan ganda memblokir ranking; pemetaan kosong hanya memblokir label analitik, bukan ranking | Profil belum lengkap, multi-peminatan, mode kosong, isolasi profil, pemetaan kosong | **Sebagian** |
+
+### 20.3 Ringkasan status
+
+- **Siap secara teknis:** fungsi generik K-Means/SAW, klien HTTP tervalidasi,
+  penyimpanan nilai/kriteria/peminatan, evaluator prasyarat, readiness gate,
+  isolasi data mahasiswa, dan penanganan kegagalan layanan.
+- **Sebagian:** seluruh OD-007–OD-015 memiliki struktur/konfigurasi teknis,
+  tetapi keputusan bisnisnya belum final. Tidak ada ranking produksi yang
+  dihasilkan selama konfigurasi wajib kosong atau aktivasi belum eksplisit.
+- **Blocked untuk ranking produksi:** OD-007–OD-008 (sumber nilai/prasyarat),
+  OD-012–OD-014 (kriteria/bobot, tipe/normalisasi, kebijakan ranking), dan
+  aktivasi eksplisit. OD-009–OD-011 kini hanya memengaruhi analitik klaster
+  (kategori `analysis`) dan tidak memblokir SAW. Membuka ranking memerlukan
+  keputusan pemilik sistem, bukan perubahan kode atau data uji.
+- **Data uji bukan data produksi:** fixture PHPUnit/Python hanya untuk menguji
+  perilaku dan tidak menjadi kriteria, bobot, cluster, atau ambang default.
