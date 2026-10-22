@@ -41,6 +41,19 @@ export function getApiErrorMessage(
   }
 }
 
+export function getApiResponseMessage(error: unknown): string | null {
+  if (!axios.isAxiosError(error)) {
+    return null
+  }
+
+  const body = error.response?.data as ApiErrorBody | undefined
+  const message = body?.message
+
+  return typeof message === 'string' && message.trim() !== ''
+    ? message
+    : null
+}
+
 export function getFieldErrors(error: unknown): FieldErrors {
   if (!axios.isAxiosError(error) || error.response?.status !== 422) {
     return {}

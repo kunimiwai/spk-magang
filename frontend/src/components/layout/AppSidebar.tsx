@@ -1,6 +1,19 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { Building2, LayoutDashboard, UserRound, X } from 'lucide-react'
+import {
+  BookOpen,
+  Building2,
+  ChartColumn,
+  ClipboardList,
+  FileText,
+  GraduationCap,
+  Inbox,
+  LayoutDashboard,
+  ListChecks,
+  Sparkles,
+  UserRound,
+  X,
+} from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { Brand } from './Brand'
 
@@ -10,8 +23,15 @@ type SidebarNavProps = {
 }
 
 function SidebarNav({ onNavigate, role }: SidebarNavProps) {
-  // Backend partner endpoints are currently admin-only. Prodi authority is
-  // still open (OD-001–OD-003), so it is not exposed here.
+  // Partner CRUD remains admin-only. Prodi can access the criteria and
+  // course master modules; other Prodi authority is still open
+  // (OD-001–OD-003), so it is not exposed here.
+  //
+  // The student module exposes a role-scoped dashboard, the student's own
+  // confirmed data, academic grades, internship applications, and the
+  // read-only peminatan reference. Admin/Prodi application review is limited
+  // to decisions explicit in the BPMN; intermediate states remain unexposed
+  // until OD-016/OD-017/OD-020/OD-021 are decided.
   const navItems = [
     { to: '/', label: 'Beranda', icon: LayoutDashboard, end: true },
     ...(role === 'admin'
@@ -21,6 +41,78 @@ function SidebarNav({ onNavigate, role }: SidebarNavProps) {
             label: 'Mitra Magang',
             icon: Building2,
             end: false,
+          },
+        ]
+      : []),
+    ...(role === 'admin' || role === 'prodi'
+      ? [
+          {
+            to: '/kriteria',
+            label: 'Kriteria',
+            icon: ListChecks,
+            end: true,
+          },
+          {
+            to: '/mata-kuliah',
+            label: 'Mata Kuliah',
+            icon: BookOpen,
+            end: true,
+          },
+          {
+            to: '/admin/pengajuan',
+            label: 'Pengajuan',
+            icon: Inbox,
+            end: false,
+          },
+          {
+            to: '/admin/analitik',
+            label: 'Analitik',
+            icon: ChartColumn,
+            end: true,
+          },
+        ]
+      : []),
+    ...(role === 'mahasiswa'
+      ? [
+          {
+            to: '/mahasiswa/dashboard',
+            label: 'Dashboard',
+            icon: LayoutDashboard,
+            end: true,
+          },
+          {
+            to: '/mahasiswa/rekomendasi',
+            label: 'Rekomendasi',
+            icon: Sparkles,
+            end: true,
+          },
+          {
+            to: '/mahasiswa/pengajuan',
+            label: 'Pengajuan Magang',
+            icon: FileText,
+            end: true,
+          },
+          {
+            to: '/mahasiswa',
+            label: 'Data Mahasiswa',
+            icon: GraduationCap,
+            end: true,
+          },
+          {
+            to: '/mahasiswa/nilai',
+            label: 'Nilai Akademik',
+            icon: ClipboardList,
+            end: true,
+          },
+        ]
+      : []),
+    ...(role === 'dpm'
+      ? [
+          {
+            to: '/dpm/bimbingan',
+            label: 'Mahasiswa Bimbingan',
+            icon: GraduationCap,
+            end: true,
           },
         ]
       : []),

@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { getApiErrorMessage, getFieldErrors } from './apiError.ts'
+import {
+  getApiErrorMessage,
+  getApiResponseMessage,
+  getFieldErrors,
+} from './apiError.ts'
 
 test('error validasi server diubah menjadi pesan per field', () => {
   const error = {
@@ -45,4 +49,21 @@ test('kegagalan jaringan menghasilkan pesan koneksi', () => {
     getApiErrorMessage(error, 'Gagal.'),
     'Tidak dapat terhubung ke backend. Periksa koneksi lalu coba lagi.',
   )
+})
+
+test('pesan konflik dari backend dapat ditampilkan apa adanya', () => {
+  const error = {
+    isAxiosError: true,
+    response: {
+      status: 409,
+      data: { message: 'Pengajuan sudah memiliki DPM.' },
+    },
+  }
+
+  assert.equal(
+    getApiResponseMessage(error),
+    'Pengajuan sudah memiliki DPM.',
+  )
+  assert.equal(getApiResponseMessage({ isAxiosError: true }), null)
+  assert.equal(getApiResponseMessage(null), null)
 })
