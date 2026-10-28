@@ -1,10 +1,17 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from 'react'
 import { Link, useParams } from 'react-router-dom'
 import axios from 'axios'
 import { ArrowLeft, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '../auth/useAuth'
 import { AcceptanceLetterPanel } from '../components/applications/AcceptanceLetterPanel'
 import { ApplicationStatusBadge } from '../components/applications/ApplicationStatusBadge'
+import { CommunicationLogPanel } from '../components/applications/CommunicationLogPanel'
 import { DpmPlacementPanel } from '../components/applications/DpmPlacementPanel'
 import { AppLayout } from '../components/layout/AppLayout'
 import {
@@ -40,8 +47,12 @@ import {
 
 type DetailState =
   | { status: 'loading' }
-  | { status: 'ready'; application: InternshipApplication }
-  | { status: 'error'; message: string }
+  | {
+      status: 'ready'
+      applicationId: number
+      application: InternshipApplication
+    }
+  | { status: 'error'; applicationId: number; message: string }
 
 export default function AdminApplicationDetailPage() {
   const { user, isLoading: authLoading, logout } = useAuth()
@@ -52,6 +63,7 @@ export default function AdminApplicationDetailPage() {
   const [detailState, setDetailState] = useState<DetailState>({
     status: 'loading',
   })
+  const applicationIdRef = useRef(applicationId)
   const [reloadKey, setReloadKey] = useState(0)
   const [decision, setDecision] = useState('')
   const [reviewNote, setReviewNote] = useState('')
@@ -60,6 +72,10 @@ export default function AdminApplicationDetailPage() {
   const [successMessage, setSuccessMessage] = useState('')
   const [saving, setSaving] = useState(false)
   const [logoutLoading, setLogoutLoading] = useState(false)
+
+  useEffect(() => {
+    applicationIdRef.current = applicationId
+  }, [applicationId])
 
   useEffect(() => {
     let active = true
@@ -75,13 +91,23 @@ export default function AdminApplicationDetailPage() {
         const application = await getAdminApplication(applicationId)
 
         if (active) {
-          setDetailState({ status: 'ready', application })
+          setDecision('')
           setReviewNote(application.reviewNote ?? '')
+          setReviewErrors({})
+          setReviewError('')
+          setSuccessMessage('')
+          setSaving(false)
+          setDetailState({
+            status: 'ready',
+            applicationId,
+            application,
+          })
         }
       } catch (error: unknown) {
         if (active) {
           setDetailState({
             status: 'error',
+            applicationId,
             message: getApiErrorMessage(
               error,
               'Detail pengajuan gagal dimuat. Coba lagi.',
@@ -106,13 +132,21 @@ export default function AdminApplicationDetailPage() {
   }
 
   function handleApplicationUpdated(updated: InternshipApplication) {
-    setDetailState({ status: 'ready', application: updated })
+    if (updated.id !== applicationIdRef.current) return
+
+    setDetailState({
+      status: 'ready',
+      applicationId: applicationIdRef.current,
+      application: updated,
+    })
   }
 
   async function handleDecisionSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     if (detailState.status !== 'ready' || saving) return
+
+    const submittedApplicationId = detailState.application.id
 
     setReviewError('')
     setSuccessMessage('')
@@ -131,15 +165,23 @@ export default function AdminApplicationDetailPage() {
 
     try {
       const updated = await updateAdminApplicationStatus(
-        detailState.application.id,
+        submittedApplicationId,
         reviewInputFromForm(values),
       )
 
-      setDetailState({ status: 'ready', application: updated })
+      if (applicationIdRef.current !== submittedApplicationId) return
+
+      setDetailState({
+        status: 'ready',
+        applicationId: submittedApplicationId,
+        application: updated,
+      })
       setDecision('')
       setReviewNote('')
       setSuccessMessage('Keputusan pengajuan berhasil disimpan.')
     } catch (error: unknown) {
+      if (applicationIdRef.current !== submittedApplicationId) return
+
       const fieldErrors = getFieldErrors(error)
       const nextErrors: ReviewFormErrors = {}
 
@@ -186,9 +228,17 @@ export default function AdminApplicationDetailPage() {
 
   const invalidIdState: DetailState = {
     status: 'error',
+    applicationId,
     message: 'Pengajuan tidak ditemukan.',
   }
-  const visibleState: DetailState = hasValidId ? detailState : invalidIdState
+  const isCurrentDetail =
+    detailState.status === 'loading' ||
+    detailState.applicationId === applicationId
+  const visibleState: DetailState = !hasValidId
+    ? invalidIdState
+    : isCurrentDetail
+      ? detailState
+      : { status: 'loading' }
   const application =
     visibleState.status === 'ready' ? visibleState.application : null
 
@@ -233,9 +283,11 @@ export default function AdminApplicationDetailPage() {
                 title="Detail pengajuan gagal dimuat"
                 message={visibleState.message}
                 action={
-                  <Button variant="outline" size="sm" onClick={retry}>
-                    Coba lagi
-                  </Button>
+                  hasValidId ? (
+                    <Button variant="outline" size="sm" onClick={retry}>
+                      Coba lagi
+                    </Button>
+                  ) : undefined
                 }
               />
             </CardContent>
@@ -252,9 +304,10 @@ export default function AdminApplicationDetailPage() {
 
             <Alert variant="info" title="Cakupan modul">
               Modul ini mencatat keputusan Diterima atau Ditolak, menampilkan
-              surat penerimaan, dan menetapkan DPM untuk pengajuan yang sudah
-              diterima. Verifikasi dokumen, penerusan ke mitra, dan reversal
-              keputusan belum ditetapkan (OD-016/OD-017/OD-020/OD-021).
+              surat penerimaan, mencatat komunikasi manual dengan mitra, dan
+              menetapkan DPM untuk pengajuan yang sudah diterima. Pengiriman
+              email/surat otomatis, verifikasi dokumen, dan reversal keputusan
+              belum ditetapkan (OD-016/OD-017/OD-020/OD-021).
             </Alert>
 
             <div className="grid items-start gap-4 lg:grid-cols-2">
@@ -366,6 +419,8 @@ export default function AdminApplicationDetailPage() {
                 </CardContent>
               </Card>
             </div>
+
+            <CommunicationLogPanel applicationId={application.id} />
 
             {application.status === 'diterima' && (
               <div className="grid items-start gap-4 lg:grid-cols-2">

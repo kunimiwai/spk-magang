@@ -1,6 +1,6 @@
 # Requirements Traceability — SPK Magang
 
-**Tanggal:** 20 Oktober 2026<br>
+**Tanggal:** 23 Oktober 2026<br>
 **Sumber proses:** `docs/bpmn/BPMN.pdf`<br>
 **Analisis pendukung:** `docs/BPMN-ANALYSIS.md`<br>
 **PRD:** `docs/PRD.md` versi 0.3<br>
@@ -358,7 +358,7 @@ Kebutuhan berikut tidak boleh diimplementasikan sebelum keputusan tersedia:
 
 ## 18. Status dokumen
 
-- Bagian 1–17 adalah dokumen traceability dan tidak mengubah status keputusan. §19–§20 mencatat status implementasi teknis serta matriks kesiapan; keduanya bukan keputusan bisnis.
+- Bagian 1–17 adalah dokumen traceability dan tidak mengubah status keputusan. §19–§21 mencatat status implementasi teknis, matriks kesiapan, serta usulan awal; semuanya bukan keputusan bisnis.
 - PRD rujukan adalah `docs/PRD.md` versi 0.3.
 - D-001–D-004 tercatat sebagai **DIKONFIRMASI**; OD-001–OD-031 tetap terbuka; Q1–Q58 dipertahankan.
 - Traceability memuat 75 kebutuhan fungsional, 9 baris aktor, 13 langkah alur, dan 7 baris NFR/ACC/SCOPE (total 104 baris).
@@ -372,16 +372,16 @@ Kebutuhan berikut tidak boleh diimplementasikan sebelum keputusan tersedia:
 
 Bagian ini **bukan status keputusan** dan tidak mengubah tabel di atas.
 Bagian ini hanya mencatat apa yang benar-benar ada di repository per
-20 Oktober 2026, agar implementasi tidak disalahartikan sebagai konfirmasi
+23 Oktober 2026, agar implementasi tidak disalahartikan sebagai konfirmasi
 kebutuhan produk.
 
 | Kebutuhan | Implementasi aktual | Verifikasi | Catatan |
 |---|---|---|---|
-| FR-AUTH-01 | Endpoint login, form login, dan penyimpanan token Bearer | PHPUnit, ESLint, build | Mahasiswa belum tentu boleh registrasi; OD-005 tetap terbuka |
-| FR-AUTH-02 | Login teknis memakai email/password untuk semua user | PHPUnit | Mekanisme login Admin/Prodi/DPM tetap menunggu OD-004 |
-| FR-AUTH-03 | Endpoint logout dan tombol logout | PHPUnit, build | Status kebutuhan logout tetap BELUM DIPUTUSKAN (OD-006) |
+| FR-AUTH-01 | Endpoint login, form login, dan penyimpanan token Bearer | PHPUnit, Vitest, ESLint, build, browser E2E | Mahasiswa belum tentu boleh registrasi; OD-005 tetap terbuka |
+| FR-AUTH-02 | Login teknis memakai email/password untuk semua user | PHPUnit, browser E2E | Mekanisme login Admin/Prodi/DPM tetap menunggu OD-004 |
+| FR-AUTH-03 | Endpoint logout dan tombol logout | PHPUnit, Vitest, build, browser E2E | Status kebutuhan logout tetap BELUM DIPUTUSKAN (OD-006) |
 | FR-AUTH-04 | Tidak diimplementasikan | — | Registrasi menunggu OD-005 |
-| FR-AUTH-05 | Middleware `role` untuk `admin`, `mahasiswa`, dan `dpm` | PHPUnit | Matriks izin lengkap belum ada; OD-001–OD-003 |
+| FR-AUTH-05 | Middleware `role` untuk `admin`, `prodi`, `mahasiswa`, dan `dpm`; route guard frontend dan redirect login yang memeriksa role tujuan | PHPUnit termasuk alur token lintas role, Vitest, browser E2E | Matriks izin lengkap belum ada; OD-001–OD-003. Redirect login memakai tujuan aman per role agar state halaman role sebelumnya tidak dipakai ulang; ini bukan penambahan hak akses |
 | FR-AUTH-06 | Sengaja tidak diimplementasikan | — | D-003: mitra tanpa akun |
 | FR-AUTH-07 | Halaman profil teknis menampilkan id, nama, email, role | Build | Status profil sebagai MVP tetap BELUM DIPUTUSKAN (OD-006) |
 | FR-AUTH-08 | Tidak diimplementasikan | — | Pengelolaan pengguna menunggu OD-030 |
@@ -396,25 +396,54 @@ kebutuhan produk.
 | FR-GRADE-01 | Master `courses`, `student_grades`, `GET/PUT /api/mahasiswa/grades`, dan UI nilai milik sendiri | PHPUnit, Vitest, build | Mencatat nilai tanpa menyatakan lulus/tidak lulus; sumber nilai resmi menunggu OD-007 |
 | FR-GRADE-02–FR-GRADE-05 | Sebagian: validasi teknis, isolasi akun, dan status prasyarat belum dikonfigurasi | PHPUnit, Vitest | Daftar prasyarat, skala, ambang, sumber, histori, dan aturan validasi resmi menunggu OD-007/OD-008 |
 | FR-ALG-01–FR-ALG-11 | Sebagian: layanan generik, klien HTTP tervalidasi, pipeline rekomendasi, readiness gate berkategori, dan status `not_ready` | PHPUnit, Python unittest, Vitest, build | Parameter K-Means/SAW, jumlah ranking, dan pemetaan menunggu OD-009–OD-015; aturan prasyarat menunggu OD-007/OD-008. Matriks kesiapan ada di §20 |
-| FR-APP-01–FR-APP-15 | Sebagian: kirim pengajuan, daftar/detail milik sendiri, daftar/detail admin/prodi, keputusan `menunggu` → `diterima`/`ditolak`, serta unggah/unduh surat penerimaan untuk pengajuan diterima | PHPUnit, Vitest, build | Verifikasi/revisi dokumen, notifikasi, penerusan ke mitra, reversal, batas lamaran ganda, dan pengajuan ulang menunggu OD-016–OD-021 |
-| FR-MITRA-01–FR-MITRA-05 | Tidak diimplementasikan | — | Komunikasi email/surat belum diputuskan |
-| FR-DPM-01–FR-DPM-08 | Sebagian: `admin`/`prodi` dapat menetapkan satu akun ber-role `dpm` untuk pengajuan diterima; mahasiswa melihat DPM miliknya | PHPUnit, Vitest, build | Kriteria penugasan, beban, persetujuan, penggantian, bimbingan, dan komunikasi DPM menunggu OD-023–OD-026 |
+| FR-APP-01–FR-APP-15 | Sebagian: katalog mitra berisi detail kontak, kirim pengajuan dengan mitra terpilih dari katalog, daftar dan detail pengajuan milik sendiri, daftar/detail admin/prodi, keputusan `menunggu` → `diterima`/`ditolak`, unggah/unduh surat penerimaan untuk pengajuan diterima, serta pencatatan manual komunikasi mitra (arah, kanal email/surat, waktu, ringkasan). Validasi surat memakai MIME isi berkas dan allowlist server; detail Admin/Prodi/Mahasiswa/DPM mengabaikan respons ID lama | PHPUnit termasuk alur integrasi token, katalog mitra, dan validasi MIME isi berkas; Vitest termasuk perubahan ID, respons terbalik, katalog, dan detail mahasiswa; build, browser E2E | Pengiriman email/surat otomatis, verifikasi/revisi dokumen, notifikasi keluar, reversal, batas lamaran ganda, dan pengajuan ulang menunggu OD-016–OD-021. Alur integrasi membuktikan log komunikasi tidak mengubah status, reviewer, atau waktu keputusan |
+| FR-MITRA-01–FR-MITRA-05 | Sebagian: Admin/Prodi dapat mencatat pengiriman ke mitra dan balasan yang diterima secara manual; waktu ber-offset dinormalisasi ke UTC; tidak ada portal, email otomatis, atau status hasil otomatis | PHPUnit termasuk alur integrasi token dan normalisasi waktu, Vitest, browser E2E | Penerimaan/peninjauan oleh mitra, template, tenggat, pengingat, dan sumber kebenaran status menunggu OD-020–OD-022 |
+| FR-DPM-01–FR-DPM-08 | Sebagian: `admin`/`prodi` dapat menetapkan satu akun ber-role `dpm` untuk pengajuan diterima; DPM hanya dapat melihat daftar dan detail pengajuan yang ditugaskan, termasuk identitas mahasiswa, mitra, penempatan, dan metadata surat | PHPUnit termasuk alur integrasi token dan penolakan lintas DPM, Vitest, build, browser E2E | Catatan review internal, riwayat komunikasi mitra, dan unduhan surat tidak diakses DPM. Kriteria penugasan, beban, persetujuan, penggantian, bimbingan, penilaian, dan komunikasi DPM menunggu OD-023–OD-026 |
 | FR-STATUS-01–FR-STATUS-02 | Sebagian: `menunggu`, `diterima`, `ditolak`; transisi hanya `menunggu` → keputusan | PHPUnit, Vitest | Status antara dan reversal menunggu OD-016/OD-021 |
-| FR-NOTIF-01–FR-NOTIF-03 | Tidak diimplementasikan | — | Kanal dan pemicu belum diputuskan |
+| FR-NOTIF-01–FR-NOTIF-03 | Sebagian: dashboard Admin/Prodi menghitung pengajuan berstatus `menunggu` sebagai notifikasi dalam aplikasi dan menampilkan pengajuan terbaru. Tidak ada email, push, atau kanal keluar | Vitest, build | Pemicu, kanal, template, dan riwayat notifikasi keluar menunggu OD-029; hitungan dashboard bukan definisi kanal resmi |
 | FR-REPORT-01, FR-INTEG-01 | Tidak diimplementasikan | — | Belum diputuskan |
-| FR-UI-01–FR-UI-04 | Shell UI, login, ringkasan, profil, halaman admin mitra, nilai akademik, rekomendasi, pengajuan mahasiswa/admin-prodi, unggah/unduh surat, serta penempatan DPM tersedia | Build, E2E browser | Dashboard DPM, verifikasi dokumen, dan revisi belum ada |
-| FR-API-01 | REST API frontend–backend untuk health, auth, CRUD mitra, nilai akademik, rekomendasi, pengajuan, surat penerimaan, dan penempatan DPM | PHPUnit, build, E2E browser | Kontrak modul bisnis lain belum ada |
+| FR-UI-01–FR-UI-04 | Shell UI, login, dashboard per role berbasis data backend, profil, halaman admin mitra, katalog mitra mahasiswa, nilai akademik, rekomendasi, daftar/detail pengajuan mahasiswa/admin-prodi, pencatatan komunikasi manual, unggah/unduh surat, penempatan DPM, serta daftar/detail mahasiswa bimbingan DPM tersedia | Vitest, build, browser E2E | Verifikasi dokumen, notifikasi keluar, revisi, dan aksi bimbingan/penilaian DPM belum ada |
+| FR-API-01 | REST API frontend–backend untuk health, auth, CRUD mitra, nilai akademik, rekomendasi, pengajuan, surat penerimaan, penempatan DPM, komunikasi mitra manual, serta daftar/detail DPM terbatas | PHPUnit termasuk alur integrasi token, build, browser E2E | Kontrak modul bisnis lain belum ada |
 | FR-API-02–FR-API-03 | Klien backend–algorithm service dan validasi kontrak request/response tersedia; parameter bisnis tetap kosong | PHPUnit, Python unittest | Kontrak generik sudah ada; isi parameter bisnis menunggu OD-009–OD-015 |
+
+**Bukti verifikasi 23 Oktober 2026.** Backend lulus **208 test PHPUnit / 1.367
+assertion** dan Pint; alur integrasi memakai token login nyata untuk pengajuan,
+komunikasi, keputusan, surat penerimaan, penempatan DPM, akses detail DPM,
+penolakan lintas mahasiswa, penolakan lintas DPM, serta pemeriksaan status dan
+metadata review. Waktu komunikasi ber-offset juga diuji tersimpan sebagai UTC.
+Validasi surat diuji dengan berkas nyata: MIME dideteksi dari isi, PDF bernama
+`.jpg` diterima sebagai PDF, teks bernama `.pdf` ditolak, PDF bernama `.php`
+ditolak, dan allowlist kosong/rusak jatuh ke default aman PDF/JPEG/PNG. Frontend
+lulus **56 test Node**, **154 test Vitest (22 file)**, ESLint, TypeScript, dan Vite
+build. Penambahan mencakup dashboard Admin/Prodi dan DPM, katalog mitra
+mahasiswa, detail pengajuan mahasiswa, redirect beranda per role, serta pesan
+konflik hapus mitra. Integrasi HTTP nyata Laravel ke FastAPI untuk `POST /saw`
+dan `POST /kmeans` juga diperiksa manual selain test dengan HTTP fake. Test detail Admin/Prodi dan DPM mencakup
+perubahan ID tanpa unmount serta respons request yang selesai terbalik. Algorithm
+service lulus **44 test Python `unittest`** setelah dependensi test dipasang.
+Browser E2E ad hoc memakai Chrome 155 headless melalui Chrome DevTools Protocol,
+database SQLite sementara, storage sementara, dan port alternatif; **43
+pemeriksaan lulus** untuk alur mahasiswa, Admin, Prodi, dan dua DPM, termasuk
+unggah/unduh surat serta pemeriksaan bahwa DPM lain tidak dapat membuka detail.
+E2E dijalankan ulang setelah hardening validasi surat dan konsistensi detail.
+E2E sebelumnya menemukan satu bug UX redirect login lintas role; perbaikannya
+memakai tujuan redirect yang divalidasi terhadap role dan diuji dengan Node
+serta Vitest. Tidak ada exception JavaScript tak tertangkap; respons 404 lintas
+DPM yang memang diharapkan ditampilkan sebagai state error UI. E2E ini tidak
+disimpan sebagai test suite otomatis dan hanya diuji pada Chrome/SQLite. Database
+pengembangan, `.env`, dan data bisnis tidak diubah.
 
 Database saat ini memuat tabel autentikasi dan pendukung Laravel, `partners`,
 `criteria`, `criterion_scores`, `student_peminatan`, `courses`,
-`student_grades`, `internship_applications`, `acceptance_letters`, dan
-`dpm_placements`. `internship_applications` hanya memuat status yang dapat
-dipertanggungjawabkan dari BPMN; status antara dan aturan lanjutan belum
-ditambahkan karena keputusan produk belum tersedia. `acceptance_letters`
-menyimpan metadata satu surat per pengajuan diterima dan `dpm_placements`
-merujuk akun `users` ber-role `dpm`; keduanya belum menetapkan kebijakan
-revisi/penggantian.
+`student_grades`, `internship_applications`, `acceptance_letters`,
+`dpm_placements`, dan `application_communications`. `internship_applications`
+hanya memuat status yang dapat dipertanggungjawabkan dari BPMN; status antara
+dan aturan lanjutan belum ditambahkan karena keputusan produk belum tersedia.
+`acceptance_letters` menyimpan metadata satu surat per pengajuan diterima,
+`dpm_placements` merujuk akun `users` ber-role `dpm`, dan
+`application_communications` menyimpan jejak manual pengiriman/balasan mitra
+tanpa mengubah status pengajuan. Kebijakan revisi/penggantian dan sumber
+kebenaran status tetap menunggu OD-017, OD-021, dan OD-024.
 Seeder tidak membuat akun default; akun uji harus dibuat secara eksplisit untuk
 lingkungan lokal.
 
@@ -498,3 +527,67 @@ file `.env` tidak diubah oleh implementasi ini.
   keputusan pemilik sistem, bukan perubahan kode atau data uji.
 - **Data uji bukan data produksi:** fixture PHPUnit/Python hanya untuk menguji
   perilaku dan tidak menjadi kriteria, bobot, cluster, atau ambang default.
+
+---
+
+## 21. Daftar keputusan yang diperlukan dan usulan awal
+
+Bagian ini melengkapi §16 dan §20.2 untuk keputusan yang masih terbuka.
+**Kolom “Usulan awal” adalah bahan diskusi, bukan keputusan, bukan komitmen
+implementasi, dan tidak mengubah status pada §16 atau
+`docs/BUSINESS-DECISION-REGISTER.md`.** Usulan tidak boleh dikutip sebagai
+persetujuan pemilik produk. Tidak ada hak akses, status, parameter algoritma,
+atau aturan bisnis baru yang diaktifkan oleh dokumen ini.
+
+### 21.1 Hak akses (OD-001–OD-003)
+
+| OD | Keputusan yang diperlukan | Dampak sistem | Usulan awal (bukan keputusan) | Status keputusan |
+|---|---|---|---|---|
+| **OD-001** | Kewenangan Admin setelah pemisahan role | Matriks route/API, menu, tombol, dan audit tindakan Admin; saat ini Admin mengelola mitra dan bersama Prodi mengakses kriteria, mata kuliah, analitik, serta pengajuan | Pertahankan pembagian minimum yang sudah berjalan sebagai baseline, lalu minta PBP mengesahkan daftar aksi Admin sebelum menambah kewenangan | **PERLU KONFIRMASI PEMILIK PRODUK** |
+| **OD-002** | Kewenangan Prodi | Route/API/UI Prodi; saat ini Prodi dapat mengakses kriteria, mata kuliah, analitik, pengajuan, dan komunikasi, tetapi CRUD mitra tetap Admin-only | Baseline usulan: Prodi menangani akademik, kriteria/nilai mitra, dan monitoring pengajuan; CRUD mitra tetap Admin sampai PBP memutuskan lain | **PERLU KONFIRMASI PEMILIK PRODUK** |
+| **OD-003** | Matriks izin seluruh role | Model role/permission, otorisasi endpoint, route guard, menu, dan aksi baca/tulis/setujui; termasuk batas DPM dan ketiadaan akun mitra | Susun matriks role × aksi dengan prinsip least privilege dan deny-by-default; jangan menambah permission sebelum matriks disahkan. DPM tetap read-only sesuai batas saat ini | **PERLU KONFIRMASI PEMILIK PRODUK** |
+
+### 21.2 Data, nilai, dan algoritma (OD-007–OD-015)
+
+Rincian kode, konfigurasi, data, dan tes per OD sudah ada di §20.2. Tabel ini
+meringkas keputusan dan usulan yang belum disetujui.
+
+| OD | Keputusan yang diperlukan | Dampak sistem | Usulan awal (bukan keputusan) | Status keputusan |
+|---|---|---|---|---|
+| **OD-007** | Sumber nilai resmi, skala nilai, dan kebijakan histori versus nilai terbaru | `student_grades`, validasi nilai, evaluator prasyarat, dan readiness ranking | Mulai dari input manual sebagai draf dengan pemilik data yang jelas; jangan menyebut nilai sebagai resmi sebelum PBP menetapkan sumber, skala, dan histori | **PERLU KONFIRMASI PEMILIK PRODUK** |
+| **OD-008** | Daftar mata kuliah prasyarat, ambang lulus, dan penanganan data tidak valid | `AcademicPrerequisiteEvaluator`, aturan prasyarat, dan ranking `not_ready` selama aturan kosong | Gunakan daftar prasyarat eksplisit dengan ambang per mata kuliah; nilai hilang/tidak dikenal diperlakukan belum memenuhi, bukan nol | **BELUM JELAS DI BPMN** |
+| **OD-009** | Atribut K-Means dan preprocessing | Matriks fitur, `config/recommendation.php`, layanan K-Means, dan analitik klaster | Pilih hanya kriteria dengan cakupan data mitra yang lengkap, dokumentasikan skala/transformasi, dan jangan melakukan imputasi diam-diam | **PERLU KONFIRMASI PEMILIK PRODUK** |
+| **OD-010** | Jumlah cluster dan cara menentukannya | Konfigurasi cluster, seed, analitik, dan reproducibility | Jangan menetapkan default; uji beberapa kandidat dengan elbow/silhouette, lalu PBP memilih jumlah dan aturan seed | **PERLU KONFIRMASI PEMILIK PRODUK** |
+| **OD-011** | Target clustering dan pemanfaatan hasil | Hubungan K-Means dengan filter/ranking, label analitik, dan perhitungan ulang | Perlakukan cluster sebagai informasi analitik/label, bukan filter wajib SAW, kecuali PBP memutuskan sebaliknya | **BELUM JELAS DI BPMN** |
+| **OD-012** | Daftar kriteria SAW, bobot, skala, total bobot, dan aturan perubahan | Tabel `criteria`, validasi CRUD, nilai mitra, dan ranking | Minta PBP memasok daftar dan bobot resmi; simpan sebagai konfigurasi/data tervalidasi, bukan fixture atau nilai contoh | **PERLU KONFIRMASI PEMILIK PRODUK** |
+| **OD-013** | Tipe benefit/cost, normalisasi, skala, dan perilaku nilai kosong/nol | `saw.py`, validasi kolom, perhitungan, dan arti hasil | Deklarasikan tipe dan rumus per kriteria; blokir ranking bila kebijakan nilai kosong/nol belum disetujui | **PERLU KONFIRMASI PEMILIK PRODUK** |
+| **OD-014** | Jumlah ranking, tie-break, dan perilaku kosong/gagal | `ranking.limit`, slice ranking, tampilan hasil, dan respons kegagalan | Minta PBP menetapkan top-N; usulan teknis: tie-break deterministik berdasarkan skor lalu ID mitra, dengan hasil kosong ditampilkan jujur | **PERLU KONFIRMASI PEMILIK PRODUK** |
+| **OD-015** | Kardinalitas peminatan, aturan perubahan, dan pemetaan ke mitra | `student_peminatan`, endpoint profil, mode `single`/`multiple`, dan label/filter rekomendasi | Usulan MVP: satu peminatan per mahasiswa dan pemetaan mitra terpisah; konfirmasi istilah DTA/PSI/SIA serta aturan perubahan sebelum diaktifkan | **PERLU KONFIRMASI PEMILIK PRODUK** |
+
+### 21.3 Pengajuan, dokumen, dan komunikasi (OD-016–OD-022)
+
+| OD | Keputusan yang diperlukan | Dampak sistem | Usulan awal (bukan keputusan) | Status keputusan |
+|---|---|---|---|---|
+| **OD-016** | Daftar status dan transisi yang sah | Enum status, endpoint keputusan, UI, audit, dan kemungkinan reversal | Usulan MVP: hanya `menunggu → diterima/ditolak`; status antara, pembatalan, dan reversal tidak ditambahkan sebelum PBP menetapkan state machine | **PERLU KONFIRMASI PEMILIK PRODUK** |
+| **OD-017** | Validasi dokumen, revisi, dan penolakan Admin/Prodi | Persyaratan unggah, verifikasi, penggantian, alur revisi, dan akses surat | Usulan MVP: satu surat penerimaan privat (PDF/JPG/PNG), tanpa penggantian; verifikasi/revisi menjadi keputusan terpisah | **BELUM JELAS DI BPMN** |
+| **OD-018** | Penolakan mitra, pembatalan, dan pengajuan ulang | Status akhir, tombol pengajuan ulang, audit, dan komunikasi mitra | Usulan: keputusan final per pengajuan; pengajuan baru hanya setelah PBP menetapkan aturan; pembatalan/reversal tidak diaktifkan | **PERLU KONFIRMASI PEMILIK PRODUK** |
+| **OD-019** | Bolehkah mahasiswa melamar ke beberapa mitra | Validasi pembuatan pengajuan, tampilan daftar, dan alur rekomendasi | Usulan MVP: satu pengajuan aktif per mahasiswa, lalu boleh mengajukan lagi setelah keputusan final | **BELUM DIPUTUSKAN** |
+| **OD-020** | Siapa menyusun dan mengirim email/surat | Integrasi email/surat, hak aksi, template, dan audit | Usulan: Admin/Prodi tetap mengirim di luar sistem; aplikasi hanya mencatat aktivitas manual tanpa email otomatis atau akun mitra | **BELUM JELAS DI BPMN** |
+| **OD-021** | Pencatatan respons, tenggat, pengingat, dan sumber kebenaran status | Status pengajuan, log komunikasi, timer, notifikasi, dan rekonsiliasi | Usulan: status pengajuan tetap sumber kebenaran; log komunikasi tidak mengubah status; tenggat/pengingat ditunda sampai disetujui | **PERLU KONFIRMASI PEMILIK PRODUK** |
+| **OD-022** | Template, format, dan riwayat surat | Penyimpanan, generate surat, pratinjau, unduhan, retensi, dan akses | Usulan: pertahankan surat privat yang diunggah, tanpa generator template; template/riwayat resmi menunggu keputusan | **BELUM DIPUTUSKAN** |
+
+### 21.4 DPM dan notifikasi (OD-023–OD-026, OD-029)
+
+| OD | Keputusan yang diperlukan | Dampak sistem | Usulan awal (bukan keputusan) | Status keputusan |
+|---|---|---|---|---|
+| **OD-023** | Kapan dan siapa yang menetapkan DPM | Endpoint penempatan, status yang boleh, UI Admin/Prodi, dan audit | Usulan: tetap setelah pengajuan `diterima`, ditetapkan oleh Admin/Prodi; konfirmasi urutan terhadap surat/verifikasi | **BELUM JELAS DI BPMN** |
+| **OD-024** | Kriteria penugasan, beban, persetujuan, dan penggantian DPM | Validasi kandidat, kuota/beban, persetujuan, dan reassignment | Usulan MVP: satu DPM per pengajuan, tanpa reassignment atau approval berlapis; kriteria/beban ditunda | **PERLU KONFIRMASI PEMILIK PRODUK** |
+| **OD-025** | Kewenangan, cakupan bimbingan, komunikasi, dan penilaian DPM | Route/API/UI DPM, akses data, dan tindakan bimbingan | Usulan MVP: DPM read-only untuk pengajuan yang ditugaskan, tanpa catatan internal, komunikasi, unduhan surat, atau penilaian | **PERLU KONFIRMASI PEMILIK PRODUK** |
+| **OD-026** | Apakah MVP berhenti di BPMN atau mencakup evaluasi/penyelesaian magang | Scope modul, status akhir, penilaian, dan laporan | Usulan: MVP berhenti setelah penempatan dan tampilan bimbingan dasar; evaluasi/penyelesaian menjadi fase terpisah | **PERLU KONFIRMASI PEMILIK PRODUK** |
+| **OD-029** | Apakah notifikasi mahasiswa/mitra termasuk MVP | Pemicu, kanal, template, status, dan hak akses | Usulan: belum ada notifikasi keluar; status dapat dilihat di aplikasi; email/pengingat memerlukan keputusan dan implementasi terpisah | **BELUM DIPUTUSKAN** |
+
+**Ringkasan:** seluruh baris di atas tetap **terbuka**. Usulan awal tidak
+mengubah kode, data, konfigurasi, status keputusan, atau matriks izin. Bila PBP
+memilih salah satu opsi, perubahan harus dicatat lebih dulu di
+`docs/BUSINESS-DECISION-REGISTER.md`, dilengkapi dampak, pemilik, dan kriteria
+penutupan sebelum implementasi.

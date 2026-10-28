@@ -14,6 +14,7 @@ import type { AuthUser } from '../services/auth'
 import {
   createStudentApplication,
   downloadStudentAcceptanceLetter,
+  getAcceptanceLetterLimit,
   listStudentApplications,
   listStudentPartnerOptions,
   uploadStudentAcceptanceLetter,
@@ -26,6 +27,8 @@ vi.mock('../services/applications', () => ({
   listStudentApplications: vi.fn(),
   createStudentApplication: vi.fn(),
   listStudentPartnerOptions: vi.fn(),
+  listStudentPartners: vi.fn(),
+  getStudentApplication: vi.fn(),
   listAdminApplications: vi.fn(),
   getAdminApplication: vi.fn(),
   updateAdminApplicationStatus: vi.fn(),
@@ -34,7 +37,7 @@ vi.mock('../services/applications', () => ({
     maxSizeKb: 5120,
     maxSizeBytes: 5242880,
     configuredMaxSizeKb: 5120,
-    allowedMimeTypes: ['application/pdf'],
+    allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/png'],
     replaceable: false,
   }),
   downloadStudentAcceptanceLetter: vi.fn(),
@@ -42,6 +45,7 @@ vi.mock('../services/applications', () => ({
   listDpmOptions: vi.fn(),
   assignDpm: vi.fn(),
   listDpmApplications: vi.fn(),
+  getDpmApplication: vi.fn(),
 }))
 
 const mockedListApplications = vi.mocked(listStudentApplications)
@@ -49,6 +53,7 @@ const mockedCreateApplication = vi.mocked(createStudentApplication)
 const mockedListPartnerOptions = vi.mocked(listStudentPartnerOptions)
 const mockedUploadLetter = vi.mocked(uploadStudentAcceptanceLetter)
 const mockedDownloadLetter = vi.mocked(downloadStudentAcceptanceLetter)
+const mockedGetAcceptanceLetterLimit = vi.mocked(getAcceptanceLetterLimit)
 
 const mahasiswaUser: AuthUser = {
   id: 7,
@@ -144,6 +149,14 @@ beforeEach(() => {
   mockedListPartnerOptions.mockReset()
   mockedUploadLetter.mockReset()
   mockedDownloadLetter.mockReset()
+  mockedGetAcceptanceLetterLimit.mockReset()
+  mockedGetAcceptanceLetterLimit.mockResolvedValue({
+    maxSizeKb: 5120,
+    maxSizeBytes: 5242880,
+    configuredMaxSizeKb: 5120,
+    allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+    replaceable: false,
+  })
 })
 
 afterEach(() => {
@@ -196,6 +209,31 @@ describe('StudentApplicationsPage', () => {
     expect(
       screen.getByText(/Hanya pengajuan milik akun yang sedang login/),
     ).toBeTruthy()
+
+    const detailLinks = screen.getAllByRole('link', {
+      name: /Lihat detail pengajuan/,
+    })
+    expect(detailLinks[0]?.getAttribute('href')).toBe(
+      '/mahasiswa/pengajuan/11',
+    )
+    expect(detailLinks[1]?.getAttribute('href')).toBe(
+      '/mahasiswa/pengajuan/12',
+    )
+  })
+
+  it('memilih mitra dari tautan katalog pada form pengajuan', async () => {
+    mockedListApplications.mockResolvedValue([])
+    mockedListPartnerOptions.mockResolvedValue([partner])
+
+    renderRoute('/mahasiswa/pengajuan?partner=3')
+
+    const select = await screen.findByRole('combobox', {
+      name: /Mitra magang/,
+    })
+
+    await waitFor(() => {
+      expect((select as HTMLSelectElement).value).toBe('3')
+    })
   })
 
   it('mengirim pengajuan ke mitra yang dipilih dan memperbarui daftar', async () => {
@@ -223,6 +261,34 @@ describe('StudentApplicationsPage', () => {
       ),
     ).toBeTruthy()
     expect(screen.getAllByText('PT Maju').length).toBeGreaterThan(0)
+  })
+
+  it('memuat ulang daftar lengkap setelah pengiriman saat daftar awal gagal', async () => {
+    mockedListApplications
+      .mockRejectedValueOnce(new AxiosError('Network Error', 'ERR_NETWORK'))
+      .mockResolvedValueOnce([pendingApplication, acceptedApplication])
+    mockedListPartnerOptions.mockResolvedValue([partner])
+    mockedCreateApplication.mockResolvedValue(pendingApplication)
+
+    renderRoute('/mahasiswa/pengajuan')
+
+    expect(
+      await screen.findByText('Pengajuan gagal dimuat'),
+    ).toBeTruthy()
+
+    const select = screen.getByRole('combobox', { name: /Mitra magang/ })
+    fireEvent.change(select, { target: { value: '3' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim pengajuan' }))
+
+    expect(
+      await screen.findByText(
+        'Pengajuan berhasil dikirim dengan status Menunggu hasil seleksi mitra.',
+      ),
+    ).toBeTruthy()
+    expect(
+      await screen.findByText('Diterima setelah seleksi mitra.'),
+    ).toBeTruthy()
+    expect(mockedListApplications).toHaveBeenCalledTimes(2)
   })
 
   it('mencegah pengiriman ganda selama request berlangsung', async () => {
@@ -378,6 +444,42 @@ describe('StudentApplicationsPage', () => {
       await screen.findByText(
         'Format surat penerimaan harus PDF, JPG, atau PNG.',
       ),
+    ).toBeTruthy()
+    expect(mockedUploadLetter).not.toHaveBeenCalled()
+  })
+
+  it('memakai allowlist MIME dan atribut accept dari server', async () => {
+    mockedListApplications.mockResolvedValue([acceptedApplication])
+    mockedListPartnerOptions.mockResolvedValue([partner])
+    mockedGetAcceptanceLetterLimit.mockResolvedValueOnce({
+      maxSizeKb: 5120,
+      maxSizeBytes: 5242880,
+      configuredMaxSizeKb: 5120,
+      allowedMimeTypes: ['application/pdf'],
+      replaceable: false,
+    })
+
+    renderRoute('/mahasiswa/pengajuan')
+
+    const input = await screen.findByLabelText(/Berkas surat penerimaan/)
+
+    await waitFor(() => {
+      expect(input.getAttribute('accept')).toBe('.pdf,application/pdf')
+    })
+
+    fireEvent.change(input, {
+      target: {
+        files: [
+          new File(['bukan pdf'], 'surat.jpg', {
+            type: 'image/jpeg',
+          }),
+        ],
+      },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Unggah surat' }))
+
+    expect(
+      await screen.findByText('Format surat penerimaan harus PDF.'),
     ).toBeTruthy()
     expect(mockedUploadLetter).not.toHaveBeenCalled()
   })

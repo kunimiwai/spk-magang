@@ -90,6 +90,32 @@ class PartnerController extends Controller
     }
 
     /**
+     * Katalog mitra untuk mahasiswa. Data kontak dan deskripsi ditampilkan
+     * sebelum mahasiswa memilih mitra pada pengajuan. Endpoint ini hanya
+     * membaca data dan tidak membuka nilai kriteria atau akses CRUD.
+     */
+    public function studentIndex(): JsonResponse
+    {
+        $partners = Partner::query()
+            ->orderBy('name')
+            ->orderBy('id')
+            ->get([
+                'id',
+                'name',
+                'address',
+                'contact',
+                'email',
+                'description',
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Katalog mitra magang.',
+            'data' => $partners,
+        ]);
+    }
+
+    /**
      * Daftar mitra untuk pemilihan di form penilaian kriteria.
      * Read-only agar role yang mengelola kriteria tidak perlu akses CRUD mitra.
      */

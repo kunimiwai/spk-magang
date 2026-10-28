@@ -14,6 +14,8 @@ vi.mock('../services/applications', () => ({
   listStudentApplications: vi.fn(),
   createStudentApplication: vi.fn(),
   listStudentPartnerOptions: vi.fn(),
+  listStudentPartners: vi.fn(),
+  getStudentApplication: vi.fn(),
   listAdminApplications: vi.fn(),
   getAdminApplication: vi.fn(),
   updateAdminApplicationStatus: vi.fn(),
@@ -24,6 +26,7 @@ vi.mock('../services/applications', () => ({
   listDpmOptions: vi.fn(),
   assignDpm: vi.fn(),
   listDpmApplications: vi.fn(),
+  getDpmApplication: vi.fn(),
 }))
 
 const mockedListApplications = vi.mocked(listAdminApplications)

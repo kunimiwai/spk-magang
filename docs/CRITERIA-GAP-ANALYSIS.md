@@ -3,7 +3,7 @@
 **Tanggal:** 20 Oktober 2026 (diperbarui 21 Oktober 2026)
 **Status:** Audit selesai. Struktur, API, dan UI kriteria serta nilai mitra sudah tersedia; **data kriteria/bobot resmi tetap NO-GO** sampai OD-012–OD-015 disetujui.
 **Ruang lingkup:** master kriteria penilaian SAW di backend. Tidak mencakup algoritma SAW/K-Means, nilai mitra, mahasiswa, pengajuan, atau frontend.
-**Status terkini:** lihat `docs/REQUIREMENTS-TRACEABILITY.md` §19–§20.
+**Status terkini:** lihat `docs/REQUIREMENTS-TRACEABILITY.md` §19–§21.
 
 ---
 

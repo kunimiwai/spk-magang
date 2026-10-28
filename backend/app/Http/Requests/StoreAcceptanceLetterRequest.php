@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\AcceptanceLetterRules;
 use App\Support\UploadLimit;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\File;
@@ -19,9 +20,7 @@ class StoreAcceptanceLetterRequest extends FormRequest
     public function rules(): array
     {
         $maxSizeKb = UploadLimit::acceptanceLetterMaxKb();
-        $allowedMimeTypes = config(
-            'internship.acceptance_letter.allowed_mime_types',
-        );
+        $allowedMimeTypes = AcceptanceLetterRules::allowedMimeTypes();
 
         return [
             'file' => [

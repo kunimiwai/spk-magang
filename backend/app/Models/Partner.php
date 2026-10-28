@@ -19,7 +19,36 @@ class Partner extends Model
         'contact',
         'email',
         'description',
+        'partner_type',
+        'da_score',
+        'sd_score',
+        'itg_score',
+        'distance_km',
+        'rating',
+        'vacancy_status',
+        'quota',
+        'requirements',
+        'is_verified',
+        'source_metadata',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'da_score' => 'decimal:4',
+            'sd_score' => 'decimal:4',
+            'itg_score' => 'decimal:4',
+            'distance_km' => 'decimal:3',
+            'rating' => 'decimal:2',
+            'quota' => 'integer',
+            'requirements' => 'array',
+            'is_verified' => 'boolean',
+            'source_metadata' => 'array',
+        ];
+    }
 
     public function criterionScores(): HasMany
     {
@@ -29,5 +58,13 @@ class Partner extends Model
     public function internshipApplications(): HasMany
     {
         return $this->hasMany(InternshipApplication::class);
+    }
+
+    /**
+     * @return HasMany<KmeansRunPartner>
+     */
+    public function kmeansRunPartners(): HasMany
+    {
+        return $this->hasMany(KmeansRunPartner::class);
     }
 }

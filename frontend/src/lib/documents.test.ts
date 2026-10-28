@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   ACCEPTANCE_LETTER_MAX_BYTES,
+  acceptanceLetterAcceptAttribute,
   formatFileSize,
   validateAcceptanceLetterFile,
 } from './documents.ts'
@@ -84,6 +85,60 @@ test('validasi surat penerimaan memakai batas efektif dari server ketika diberik
       effectiveBytes,
     ),
     'Ukuran surat penerimaan maksimal 2 MB.',
+  )
+})
+
+test('validasi surat penerimaan memakai allowlist MIME dari server', () => {
+  assert.equal(
+    validateAcceptanceLetterFile(
+      {
+        name: 'surat.pdf',
+        size: 1024,
+        type: 'application/pdf',
+      },
+      ACCEPTANCE_LETTER_MAX_BYTES,
+      ['application/pdf'],
+    ),
+    null,
+  )
+  assert.equal(
+    validateAcceptanceLetterFile(
+      {
+        name: 'surat.jpg',
+        size: 1024,
+        type: 'image/jpeg',
+      },
+      ACCEPTANCE_LETTER_MAX_BYTES,
+      ['application/pdf'],
+    ),
+    'Format surat penerimaan harus PDF.',
+  )
+  assert.equal(
+    validateAcceptanceLetterFile(
+      {
+        name: 'surat.png',
+        size: 1024,
+        type: 'image/png',
+      },
+      ACCEPTANCE_LETTER_MAX_BYTES,
+      [],
+    ),
+    null,
+  )
+})
+
+test('atribut accept mengikuti allowlist MIME yang aktif', () => {
+  assert.equal(
+    acceptanceLetterAcceptAttribute(),
+    '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png',
+  )
+  assert.equal(
+    acceptanceLetterAcceptAttribute(['image/jpeg']),
+    '.jpg,.jpeg,image/jpeg',
+  )
+  assert.equal(
+    acceptanceLetterAcceptAttribute(['application/pdf', 'image/webp']),
+    '.pdf,application/pdf,image/webp',
   )
 })
 

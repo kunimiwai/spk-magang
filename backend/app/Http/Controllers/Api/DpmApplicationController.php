@@ -53,4 +53,39 @@ class DpmApplicationController extends Controller
             'data' => $applications,
         ]);
     }
+
+    /**
+     * Detail satu mahasiswa bimbingan.
+     *
+     * Query dibatasi pada penempatan milik DPM aktif. Pengajuan yang tidak
+     * ditugaskan kepada pengguna menghasilkan 404 agar keberadaannya tidak
+     * terungkap. Catatan review Admin/Prodi tetap tidak dimuat.
+     */
+    public function show(
+        Request $request,
+        InternshipApplication $application,
+    ): JsonResponse {
+        $assignedApplication = InternshipApplication::query()
+            ->select([
+                'id',
+                'user_id',
+                'partner_id',
+                'status',
+                'submitted_at',
+                'created_at',
+                'updated_at',
+            ])
+            ->whereKey($application->getKey())
+            ->whereHas('dpmPlacement', function ($query) use ($request): void {
+                $query->where('dpm_id', $request->user()->getKey());
+            })
+            ->with(self::ASSIGNED_RELATIONS)
+            ->firstOrFail();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail mahasiswa bimbingan magang.',
+            'data' => $assignedApplication,
+        ]);
+    }
 }

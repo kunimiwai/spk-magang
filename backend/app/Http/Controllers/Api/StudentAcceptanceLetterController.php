@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAcceptanceLetterRequest;
 use App\Models\InternshipApplication;
 use App\Services\AcceptanceLetterService;
+use App\Support\AcceptanceLetterRules;
 use App\Support\UploadLimit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,9 +30,7 @@ class StudentAcceptanceLetterController extends Controller
                 'configured_max_size_kb' => (int) config(
                     'internship.acceptance_letter.max_size_kb',
                 ),
-                'allowed_mime_types' => config(
-                    'internship.acceptance_letter.allowed_mime_types',
-                ),
+                'allowed_mime_types' => AcceptanceLetterRules::allowedMimeTypes(),
                 'replaceable' => (bool) config(
                     'internship.acceptance_letter.replaceable',
                 ),

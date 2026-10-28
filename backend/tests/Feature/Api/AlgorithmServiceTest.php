@@ -11,24 +11,24 @@ use Tests\TestCase;
 
 class AlgorithmServiceTest extends TestCase
 {
-    public function test_service_is_reported_unconfigured_without_an_http_request(): void
+    public function test_service_is_reported_configured_without_an_http_request(): void
     {
         config(['services.algorithm.url' => null]);
         Http::fake();
 
         $service = app(AlgorithmService::class);
 
-        $this->assertFalse($service->configurationStatus()['configured']);
+        $this->assertTrue($service->configurationStatus()['configured']);
+        $this->assertSame(
+            'Komputasi algoritma lokal tersedia.',
+            $service->configurationStatus()['message'],
+        );
 
-        try {
-            $service->saw([[1.0]], [1.0], ['benefit']);
-            $this->fail('Expected AlgorithmServiceException.');
-        } catch (AlgorithmServiceException $exception) {
-            $this->assertSame(
-                'Layanan algoritma belum dikonfigurasi.',
-                $exception->getMessage(),
-            );
-        }
+        // Local SAW computation should work without external service.
+        $result = $service->saw([[1.0], [2.0]], [1.0], ['benefit']);
+
+        $this->assertSame(2, count($result['scores']));
+        $this->assertSame(2, count($result['ranking']));
 
         Http::assertNothingSent();
     }
@@ -208,5 +208,139 @@ class AlgorithmServiceTest extends TestCase
         $this->expectExceptionMessage('Respons layanan algoritma tidak valid.');
 
         app(AlgorithmService::class)->saw([[1.0]], [1.0], ['benefit']);
+    }
+
+    public function test_health_returns_ok_when_service_is_healthy(): void
+    {
+        config(['services.algorithm.url' => 'http://algorithm.test']);
+        Http::fake([
+            'http://algorithm.test/health' => Http::response([
+                'success' => true,
+                'data' => [
+                    'status' => 'ok',
+                    'service' => 'spk-algorithm',
+                ],
+            ]),
+        ]);
+
+        $result = app(AlgorithmService::class)->health();
+
+        $this->assertTrue($result['ok']);
+        $this->assertSame('spk-algorithm', $result['service']);
+
+        Http::assertSent(function ($request): bool {
+            return $request->url() === 'http://algorithm.test/health'
+                && $request->method() === 'GET';
+        });
+    }
+
+    public function test_health_returns_local_when_url_not_configured(): void
+    {
+        config(['services.algorithm.url' => null]);
+        Http::fake();
+
+        $result = app(AlgorithmService::class)->health();
+
+        $this->assertTrue($result['ok']);
+        $this->assertSame('local', $result['service']);
+
+        Http::assertNothingSent();
+    }
+
+    public function test_health_throws_exception_when_connection_fails(): void
+    {
+        config(['services.algorithm.url' => 'http://algorithm.test']);
+        Http::fake([
+            '*' => fn () => throw new ConnectionException(
+                'cURL error 28: Operation timed out after 5000 milliseconds',
+            ),
+        ]);
+
+        $this->expectException(AlgorithmServiceException::class);
+        $this->expectExceptionMessage(
+            'Layanan algoritma tidak dapat dihubungi atau melewati batas waktu.',
+        );
+
+        app(AlgorithmService::class)->health();
+    }
+
+    public function test_health_throws_exception_on_unsuccessful_response(): void
+    {
+        config(['services.algorithm.url' => 'http://algorithm.test']);
+        Http::fake([
+            'http://algorithm.test/health' => Http::response(
+                ['error' => 'internal stack trace'],
+                500,
+            ),
+        ]);
+
+        $this->expectException(AlgorithmServiceException::class);
+        $this->expectExceptionMessage(
+            'Layanan algoritma mengembalikan respons gagal.',
+        );
+
+        app(AlgorithmService::class)->health();
+    }
+
+    public function test_health_throws_exception_on_malformed_response(): void
+    {
+        config(['services.algorithm.url' => 'http://algorithm.test']);
+        Http::fake([
+            'http://algorithm.test/health' => Http::response([
+                'success' => true,
+                'data' => [
+                    'status' => 123,
+                ],
+            ]),
+        ]);
+
+        $this->expectException(AlgorithmServiceException::class);
+        $this->expectExceptionMessage('Respons layanan algoritma tidak valid.');
+
+        app(AlgorithmService::class)->health();
+    }
+
+    public function test_saw_throws_exception_on_http_422_validation_error(): void
+    {
+        config(['services.algorithm.url' => 'http://algorithm.test']);
+        Http::fake([
+            'http://algorithm.test/saw' => Http::response([
+                'success' => false,
+                'error' => [
+                    'code' => 'invalid_request',
+                    'message' => 'Input request tidak valid.',
+                    'details' => [],
+                ],
+            ], 422),
+        ]);
+
+        $this->expectException(AlgorithmServiceException::class);
+        $this->expectExceptionMessage(
+            'Layanan algoritma mengembalikan respons gagal.',
+        );
+
+        app(AlgorithmService::class)->saw([[1.0]], [1.0], ['benefit']);
+    }
+
+    public function test_kmeans_throws_exception_on_http_422_validation_error(): void
+    {
+        config(['services.algorithm.url' => 'http://algorithm.test']);
+        Http::fake([
+            'http://algorithm.test/kmeans' => Http::response([
+                'success' => false,
+                'error' => [
+                    'code' => 'invalid_request',
+                    'message' => 'Input request tidak valid.',
+                    'details' => [],
+                ],
+            ], 422),
+        ]);
+
+        $this->expectException(AlgorithmServiceException::class);
+        $this->expectExceptionMessage(
+            'Layanan algoritma mengembalikan respons gagal.',
+        );
+
+        app(AlgorithmService::class)->kmeans([[1.0]], 2, 42);
     }
 }

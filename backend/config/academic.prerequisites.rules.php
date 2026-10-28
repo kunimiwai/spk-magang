@@ -1,0 +1,1 @@
+<?php return ["course_id"=>7,"minimum_score"=>70];

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Course;
+use App\Models\SystemSetting;
 use App\Models\User;
 
 /**
@@ -169,10 +170,23 @@ class AcademicPrerequisiteEvaluator
      */
     private function rules(): ?array
     {
-        $raw = config('academic.prerequisites.rules');
+        // Prioritaskan nilai dari tabel system_settings (dikelola melalui UI),
+        // lalu fall back ke konfigurasi environment.
+        $raw = SystemSetting::get('academic.prerequisites.rules');
 
-        if (! is_array($raw) || ! array_is_list($raw)) {
+        if ($raw === null) {
+            $raw = config('academic.prerequisites.rules');
+        }
+
+        // Normalisasi: jika bukan daftar rule, bentuk menjadi daftar rule satu elemen
+        if (! is_array($raw)) {
             return null;
+        }
+
+        // Jika bukan daftar (sequential list), anggap sebagai single rule dan wrap
+        if (! array_is_list($raw)) {
+            // Single associative array like ["course_id" => 7, "minimum_score" => 70]
+            $raw = [ $raw ];
         }
 
         $result = [];

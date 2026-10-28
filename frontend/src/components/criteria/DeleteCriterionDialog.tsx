@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import type { Criterion } from '../../services/criteria'
 import { deleteCriterion } from '../../services/criteria'
-import { getApiErrorMessage } from '../../lib/apiError'
+import {
+  getApiErrorMessage,
+  getApiResponseMessage,
+} from '../../lib/apiError'
 import { Alert } from '../ui/Alert'
 import { Button } from '../ui/Button'
 import { Dialog } from '../ui/Dialog'
@@ -28,7 +31,10 @@ export function DeleteCriterionDialog({
       await deleteCriterion(criterion.id)
       onDeleted('Kriteria berhasil dihapus.')
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, 'Kriteria gagal dihapus. Coba lagi.'))
+      setError(
+        getApiResponseMessage(err) ??
+          getApiErrorMessage(err, 'Kriteria gagal dihapus. Coba lagi.'),
+      )
     } finally {
       setDeleting(false)
     }

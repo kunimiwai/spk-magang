@@ -14,6 +14,8 @@ vi.mock('../services/applications', () => ({
   listStudentApplications: vi.fn(),
   createStudentApplication: vi.fn(),
   listStudentPartnerOptions: vi.fn(),
+  listStudentPartners: vi.fn(),
+  getStudentApplication: vi.fn(),
   listAdminApplications: vi.fn(),
   getAdminApplication: vi.fn(),
   updateAdminApplicationStatus: vi.fn(),
@@ -24,6 +26,7 @@ vi.mock('../services/applications', () => ({
   listDpmOptions: vi.fn(),
   assignDpm: vi.fn(),
   listDpmApplications: vi.fn(),
+  getDpmApplication: vi.fn(),
 }))
 
 const mockedListAssignments = vi.mocked(listDpmApplications)
@@ -145,6 +148,9 @@ describe('DpmAssignmentsPage', () => {
       screen.getByText(/surat-penerimaan\.pdf/),
     ).toBeTruthy()
     expect(screen.getByText(/Ditetapkan/)).toBeTruthy()
+    expect(
+      screen.getByRole('link', { name: /Lihat detail/ }).getAttribute('href'),
+    ).toBe('/dpm/bimbingan/12')
     expect(mockedListAssignments).toHaveBeenCalledTimes(1)
   })
 

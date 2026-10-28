@@ -3,8 +3,9 @@
  *
  * BPMN does not define document format or size (OD-017). These values are
  * technical MVP defaults. The backend remains the source of truth; the upload
- * panel reads the effective limit from `/api/mahasiswa/acceptance-letter/limit`
- * and only falls back to these constants when that request fails.
+ * panel reads the effective size limit and MIME allowlist from
+ * `/api/mahasiswa/acceptance-letter/limit` and only falls back to these
+ * constants when that request fails or the server allowlist is empty.
  */
 export const ACCEPTANCE_LETTER_MAX_BYTES = 5 * 1024 * 1024
 
@@ -14,8 +15,48 @@ export const ACCEPTANCE_LETTER_ALLOWED_MIME_TYPES = [
   'image/png',
 ]
 
-export const ACCEPTANCE_LETTER_ACCEPT_ATTRIBUTE =
-  '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png'
+const MIME_TYPE_LABELS: Record<string, string> = {
+  'application/pdf': 'PDF',
+  'image/jpeg': 'JPG',
+  'image/png': 'PNG',
+}
+
+const MIME_TYPE_EXTENSIONS: Record<string, string[]> = {
+  'application/pdf': ['.pdf'],
+  'image/jpeg': ['.jpg', '.jpeg'],
+  'image/png': ['.png'],
+}
+
+function effectiveAllowedMimeTypes(allowedMimeTypes: string[]): string[] {
+  return allowedMimeTypes.length > 0
+    ? allowedMimeTypes
+    : ACCEPTANCE_LETTER_ALLOWED_MIME_TYPES
+}
+
+export function acceptanceLetterFormatLabel(
+  allowedMimeTypes: string[] = ACCEPTANCE_LETTER_ALLOWED_MIME_TYPES,
+): string {
+  const labels = effectiveAllowedMimeTypes(allowedMimeTypes).map(
+    (mimeType) => MIME_TYPE_LABELS[mimeType] ?? mimeType,
+  )
+
+  if (labels.length <= 1) {
+    return labels[0] ?? 'format yang didukung'
+  }
+
+  return `${labels.slice(0, -1).join(', ')}, atau ${labels[labels.length - 1]}`
+}
+
+export function acceptanceLetterAcceptAttribute(
+  allowedMimeTypes: string[] = ACCEPTANCE_LETTER_ALLOWED_MIME_TYPES,
+): string {
+  const mimeTypes = effectiveAllowedMimeTypes(allowedMimeTypes)
+  const extensions = mimeTypes.flatMap(
+    (mimeType) => MIME_TYPE_EXTENSIONS[mimeType] ?? [],
+  )
+
+  return [...new Set([...extensions, ...mimeTypes])].join(',')
+}
 
 export type UploadFileLike = {
   name: string
@@ -48,6 +89,7 @@ export function formatFileSize(bytes: number): string {
 export function validateAcceptanceLetterFile(
   file: UploadFileLike,
   maxBytes: number = ACCEPTANCE_LETTER_MAX_BYTES,
+  allowedMimeTypes: string[] = ACCEPTANCE_LETTER_ALLOWED_MIME_TYPES,
 ): string | null {
   if (file.size <= 0) {
     return 'Berkas surat penerimaan kosong.'
@@ -57,8 +99,12 @@ export function validateAcceptanceLetterFile(
     return `Ukuran surat penerimaan maksimal ${formatFileSize(maxBytes)}.`
   }
 
-  if (!ACCEPTANCE_LETTER_ALLOWED_MIME_TYPES.includes(file.type)) {
-    return 'Format surat penerimaan harus PDF, JPG, atau PNG.'
+  const acceptedMimeTypes = effectiveAllowedMimeTypes(allowedMimeTypes)
+
+  if (!acceptedMimeTypes.includes(file.type)) {
+    return `Format surat penerimaan harus ${acceptanceLetterFormatLabel(
+      acceptedMimeTypes,
+    )}.`
   }
 
   return null

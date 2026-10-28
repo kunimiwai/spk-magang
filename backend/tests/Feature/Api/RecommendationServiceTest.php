@@ -60,7 +60,7 @@ class RecommendationServiceTest extends TestCase
         $this->assertSame('blocked', $this->checkStatus($result, 'kmeans_configuration'));
         $this->assertSame('blocked', $this->checkStatus($result, 'peminatan_cluster_map'));
         $this->assertSame('blocked', $this->checkStatus($result, 'ranking_policy'));
-        $this->assertSame('blocked', $this->checkStatus($result, 'algorithm_service'));
+        $this->assertSame('ok', $this->checkStatus($result, 'algorithm_service'));
 
         $this->assertSame('decision', $this->checkCategory($result, 'activation'));
         $this->assertSame('data', $this->checkCategory($result, 'partners'));

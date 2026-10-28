@@ -5,6 +5,7 @@ import {
   normalizeApplication,
   normalizeApplicationList,
   normalizeDpmOptionList,
+  normalizePartnerList,
   normalizePartnerOptionList,
   reviewInputFromForm,
   statusBadgeVariant,
@@ -92,6 +93,43 @@ test('daftar opsi mitra menyaring id dan nama yang tidak valid', () => {
     { id: 2, name: 'PT B' },
   ])
   assert.deepEqual(normalizePartnerOptionList(null), [])
+})
+
+test('katalog mitra mempertahankan detail dan menyaring entri rusak', () => {
+  const partners = normalizePartnerList([
+    {
+      id: 1,
+      name: 'PT A',
+      address: 'Jl. A',
+      contact: '0811',
+      email: 'a@example.test',
+      description: 'Mitra A.',
+    },
+    { id: 1, name: 'PT Duplikat' },
+    { id: 2, name: '  PT B  ', address: '', contact: null },
+    { id: 0, name: 'Tidak Valid' },
+    null,
+  ])
+
+  assert.deepEqual(partners, [
+    {
+      id: 1,
+      name: 'PT A',
+      address: 'Jl. A',
+      contact: '0811',
+      email: 'a@example.test',
+      description: 'Mitra A.',
+    },
+    {
+      id: 2,
+      name: 'PT B',
+      address: null,
+      contact: null,
+      email: null,
+      description: null,
+    },
+  ])
+  assert.deepEqual(normalizePartnerList('bukan-array'), [])
 })
 
 test('label dan varian badge mengikuti status BPMN', () => {

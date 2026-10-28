@@ -431,8 +431,8 @@ export default function StudentDashboardPage() {
                     title="Pengajuan ditolak"
                     className="mt-3"
                   >
-                    Pengajuan dinyatakan ditolak. Lihat pengajuan lain pada
-                    halaman rekomendasi.
+                    Pengajuan dinyatakan ditolak. Lihat rekomendasi alternatif,
+                    lalu buat pengajuan baru dari halaman Pengajuan Magang.
                   </Alert>
                 )}
 

@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import type { Course } from '../../services/academic'
 import { deleteCourse } from '../../services/academic'
-import { getApiErrorMessage } from '../../lib/apiError'
+import {
+  getApiErrorMessage,
+  getApiResponseMessage,
+} from '../../lib/apiError'
 import { Alert } from '../ui/Alert'
 import { Button } from '../ui/Button'
 import { Dialog } from '../ui/Dialog'
@@ -29,7 +32,8 @@ export function DeleteCourseDialog({
       onDeleted('Mata kuliah berhasil dihapus.')
     } catch (err: unknown) {
       setError(
-        getApiErrorMessage(err, 'Mata kuliah gagal dihapus. Coba lagi.'),
+        getApiResponseMessage(err) ??
+          getApiErrorMessage(err, 'Mata kuliah gagal dihapus. Coba lagi.'),
       )
     } finally {
       setDeleting(false)

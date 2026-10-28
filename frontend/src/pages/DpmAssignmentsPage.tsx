@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { FileText, GraduationCap, UserRound } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ArrowRight, FileText, GraduationCap, UserRound } from 'lucide-react'
 import { useAuth } from '../auth/useAuth'
 import { ApplicationStatusBadge } from '../components/applications/ApplicationStatusBadge'
 import { AppLayout } from '../components/layout/AppLayout'
@@ -20,6 +21,7 @@ import {
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/States'
 import { getApiErrorMessage } from '../lib/apiError'
 import { formatApplicationDate } from '../lib/applications'
+import { buttonClasses } from '../lib/buttonStyles'
 import {
   listDpmApplications,
   type InternshipApplication,
@@ -224,10 +226,23 @@ export default function DpmAssignmentsPage() {
                           </div>
                         </div>
 
-                        <div className="sm:justify-self-end">
+                        <div className="flex flex-wrap items-center gap-2 sm:justify-self-end">
                           <ApplicationStatusBadge
                             status={application.status}
                           />
+                          <Link
+                            to={`/dpm/bimbingan/${application.id}`}
+                            className={buttonClasses({
+                              variant: 'outline',
+                              size: 'sm',
+                            })}
+                          >
+                            Lihat detail
+                            <ArrowRight
+                              className="size-4"
+                              aria-hidden="true"
+                            />
+                          </Link>
                         </div>
                       </li>
                     ))}

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\SystemSetting;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -36,6 +37,16 @@ class StudentProfileService
 
     public function mode(): ?string
     {
+        // Prioritaskan nilai dari tabel system_settings (dikelola melalui UI),
+        // lalu fall back ke konfigurasi environment.
+        $mode = SystemSetting::get('student.peminatan.mode');
+
+        if ($mode !== null && $mode !== '') {
+            return is_string($mode) && in_array($mode, self::MODES, true)
+                ? $mode
+                : null;
+        }
+
         $mode = config('student.peminatan.mode');
 
         return is_string($mode) && in_array($mode, self::MODES, true)

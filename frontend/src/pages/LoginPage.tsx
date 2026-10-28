@@ -14,11 +14,19 @@ import {
 import { Field } from '../components/ui/Field'
 import { Input } from '../components/ui/Input'
 import { getLoginRedirectPath } from '../lib/authRedirect'
+import { isPathAllowedForRole } from '../lib/routeAccess'
 
 export default function LoginPage() {
-  const { login, isAuthenticated, isLoading } = useAuth()
+  const { login, isAuthenticated, isLoading, user } = useAuth()
   const location = useLocation()
-  const redirectTo = getLoginRedirectPath(location.state)
+  const requestedPath = getLoginRedirectPath(location.state)
+  // A login form can be reached after a previous account logged out. The
+  // stored "from" path may belong to the previous role, so ignore it when the
+  // authenticated account cannot open it.
+  const redirectTo =
+    user && !isPathAllowedForRole(requestedPath, user.role)
+      ? '/'
+      : requestedPath
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -129,24 +137,45 @@ export default function LoginPage() {
                   </Alert>
                 )}
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                  isLoading={loading}
-                  loadingLabel="Memproses…"
-                >
-                  Masuk
-                </Button>
-              </form>
+                <div className="flex items-center justify-between">
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    isLoading={loading}
+                    loadingLabel="Memproses…"
+                  >
+                    Masuk
+                  </Button>
+                </div>
 
-              <p className="mt-6 text-center text-sm text-muted-foreground">
-                <Link
-                  to="/"
-                  className="rounded font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                >
-                  Kembali ke beranda
-                </Link>
-              </p>
+                <p className="mt-4 text-right">
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    Lupa password?
+                  </Link>
+                </p>
+
+                <p className="mt-6 text-center text-sm text-muted-foreground">
+                  Belum punya akun?{' '}
+                  <Link
+                    to="/register"
+                    className="font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    Daftar sebagai mahasiswa
+                  </Link>
+                </p>
+
+                <p className="mt-4 text-center text-sm text-muted-foreground">
+                  <Link
+                    to="/"
+                    className="rounded font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    Kembali ke beranda
+                  </Link>
+                </p>
+              </form>
             </CardContent>
           </Card>
 

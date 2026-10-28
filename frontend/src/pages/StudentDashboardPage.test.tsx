@@ -34,6 +34,8 @@ vi.mock('../services/applications', () => ({
   listStudentApplications: vi.fn(),
   createStudentApplication: vi.fn(),
   listStudentPartnerOptions: vi.fn(),
+  listStudentPartners: vi.fn(),
+  getStudentApplication: vi.fn(),
   listAdminApplications: vi.fn(),
   getAdminApplication: vi.fn(),
   updateAdminApplicationStatus: vi.fn(),
@@ -42,7 +44,7 @@ vi.mock('../services/applications', () => ({
     maxSizeKb: 5120,
     maxSizeBytes: 5242880,
     configuredMaxSizeKb: 5120,
-    allowedMimeTypes: ['application/pdf'],
+    allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/png'],
     replaceable: false,
   }),
   downloadStudentAcceptanceLetter: vi.fn(),
@@ -50,6 +52,7 @@ vi.mock('../services/applications', () => ({
   listDpmOptions: vi.fn(),
   assignDpm: vi.fn(),
   listDpmApplications: vi.fn(),
+  getDpmApplication: vi.fn(),
 }))
 
 const mockedGetStudentProfile = vi.mocked(getStudentProfile)
@@ -113,6 +116,14 @@ const acceptedApplication: InternshipApplication = {
       role: 'dpm',
     },
   },
+}
+
+const rejectedApplication: InternshipApplication = {
+  ...acceptedApplication,
+  status: 'ditolak',
+  reviewNote: 'Ditolak setelah seleksi mitra.',
+  acceptanceLetter: null,
+  dpmPlacement: null,
 }
 
 function createAuthValue(
@@ -416,5 +427,21 @@ describe('StudentDashboardPage', () => {
     expect(
       screen.getByRole('link', { name: /Buka pengajuan magang/ }),
     ).toBeTruthy()
+  })
+
+  it('mengarahkan pengajuan ditolak ke rekomendasi alternatif tanpa menyebut pengajuan ada di sana', async () => {
+    mockedGetStudentProfile.mockResolvedValue(savedProfile)
+    mockedListStudentApplications.mockResolvedValue([rejectedApplication])
+
+    renderDashboard()
+
+    expect(
+      await screen.findByText(
+        /Lihat rekomendasi alternatif, lalu buat pengajuan baru dari halaman Pengajuan Magang/,
+      ),
+    ).toBeTruthy()
+    expect(
+      screen.queryByText(/Lihat pengajuan lain pada halaman rekomendasi/),
+    ).toBeNull()
   })
 })

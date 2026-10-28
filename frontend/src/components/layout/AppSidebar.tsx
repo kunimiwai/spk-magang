@@ -10,6 +10,8 @@ import {
   Inbox,
   LayoutDashboard,
   ListChecks,
+  Settings,
+  ShieldAlert,
   Sparkles,
   UserRound,
   X,
@@ -33,7 +35,16 @@ function SidebarNav({ onNavigate, role }: SidebarNavProps) {
   // to decisions explicit in the BPMN; intermediate states remain unexposed
   // until OD-016/OD-017/OD-020/OD-021 are decided.
   const navItems = [
-    { to: '/', label: 'Beranda', icon: LayoutDashboard, end: true },
+    ...(role === 'admin' || role === 'prodi'
+      ? [
+          {
+            to: '/admin',
+            label: 'Dashboard',
+            icon: LayoutDashboard,
+            end: true,
+          },
+        ]
+      : []),
     ...(role === 'admin'
       ? [
           {
@@ -70,6 +81,18 @@ function SidebarNav({ onNavigate, role }: SidebarNavProps) {
             icon: ChartColumn,
             end: true,
           },
+          {
+            to: '/admin/pengaturan',
+            label: 'Pengaturan Sistem',
+            icon: Settings,
+            end: true,
+          },
+          {
+            to: '/admin/pengguna',
+            label: 'Manajemen Pengguna',
+            icon: ShieldAlert,
+            end: true,
+          },
         ]
       : []),
     ...(role === 'mahasiswa'
@@ -78,6 +101,12 @@ function SidebarNav({ onNavigate, role }: SidebarNavProps) {
             to: '/mahasiswa/dashboard',
             label: 'Dashboard',
             icon: LayoutDashboard,
+            end: true,
+          },
+          {
+            to: '/mahasiswa/mitra',
+            label: 'Mitra Magang',
+            icon: Building2,
             end: true,
           },
           {
@@ -90,7 +119,7 @@ function SidebarNav({ onNavigate, role }: SidebarNavProps) {
             to: '/mahasiswa/pengajuan',
             label: 'Pengajuan Magang',
             icon: FileText,
-            end: true,
+            end: false,
           },
           {
             to: '/mahasiswa',
@@ -109,10 +138,16 @@ function SidebarNav({ onNavigate, role }: SidebarNavProps) {
     ...(role === 'dpm'
       ? [
           {
+            to: '/dpm',
+            label: 'Dashboard',
+            icon: LayoutDashboard,
+            end: true,
+          },
+          {
             to: '/dpm/bimbingan',
             label: 'Mahasiswa Bimbingan',
             icon: GraduationCap,
-            end: true,
+            end: false,
           },
         ]
       : []),

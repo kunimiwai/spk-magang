@@ -89,6 +89,69 @@ class DpmApplicationTest extends TestCase
             ->assertJsonCount(0, 'data');
     }
 
+    public function test_dpm_can_read_detail_only_for_an_assigned_application(): void
+    {
+        $dpm = User::factory()->create(['role' => 'dpm']);
+        $otherDpm = User::factory()->create(['role' => 'dpm']);
+        $reviewer = User::factory()->create(['role' => 'admin']);
+
+        $assignedApplication = InternshipApplication::factory()->create([
+            'status' => 'diterima',
+            'review_note' => 'Catatan internal Admin.',
+        ]);
+        $otherApplication = InternshipApplication::factory()->create([
+            'status' => 'diterima',
+        ]);
+
+        DpmPlacement::factory()->create([
+            'internship_application_id' => $assignedApplication->id,
+            'dpm_id' => $dpm->id,
+            'assigned_by' => $reviewer->id,
+        ]);
+        DpmPlacement::factory()->create([
+            'internship_application_id' => $otherApplication->id,
+            'dpm_id' => $otherDpm->id,
+            'assigned_by' => $reviewer->id,
+        ]);
+
+        $this->actingAs($dpm, 'sanctum')
+            ->getJson("/api/dpm/applications/{$assignedApplication->id}")
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.id', $assignedApplication->id)
+            ->assertJsonPath('data.student.id', $assignedApplication->user_id)
+            ->assertJsonPath('data.dpm_placement.dpm.id', $dpm->id)
+            ->assertJsonMissingPath('data.review_note')
+            ->assertJsonMissingPath('data.reviewed_by')
+            ->assertJsonMissingPath('data.communications');
+
+        $this->actingAs($dpm, 'sanctum')
+            ->getJson("/api/dpm/applications/{$otherApplication->id}")
+            ->assertNotFound();
+
+        $this->actingAs($dpm, 'sanctum')
+            ->getJson('/api/dpm/applications/999')
+            ->assertNotFound();
+    }
+
+    public function test_other_roles_cannot_read_dpm_application_detail(): void
+    {
+        $application = InternshipApplication::factory()->create();
+
+        foreach (['admin', 'prodi', 'mahasiswa'] as $role) {
+            $user = User::factory()->create(['role' => $role]);
+
+            $this->actingAs($user, 'sanctum')
+                ->getJson("/api/dpm/applications/{$application->id}")
+                ->assertForbidden();
+        }
+    }
+
+    public function test_dpm_application_detail_requires_authentication(): void
+    {
+        $this->getJson('/api/dpm/applications/1')->assertUnauthorized();
+    }
+
     public function test_other_roles_cannot_access_the_dpm_application_list(): void
     {
         foreach (['admin', 'prodi', 'mahasiswa'] as $role) {

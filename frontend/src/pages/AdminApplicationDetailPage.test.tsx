@@ -1,12 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  act,
   cleanup,
   fireEvent,
   render,
   screen,
   waitFor,
 } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, useNavigate } from 'react-router-dom'
 import { AxiosError } from 'axios'
 import { AuthContext, type AuthContextValue } from '../auth/AuthContext'
 import { AppRoutes } from '../App'
@@ -25,6 +26,8 @@ vi.mock('../services/applications', () => ({
   listStudentApplications: vi.fn(),
   createStudentApplication: vi.fn(),
   listStudentPartnerOptions: vi.fn(),
+  listStudentPartners: vi.fn(),
+  getStudentApplication: vi.fn(),
   listAdminApplications: vi.fn(),
   getAdminApplication: vi.fn(),
   updateAdminApplicationStatus: vi.fn(),
@@ -35,6 +38,12 @@ vi.mock('../services/applications', () => ({
   listDpmOptions: vi.fn(),
   assignDpm: vi.fn(),
   listDpmApplications: vi.fn(),
+  getDpmApplication: vi.fn(),
+}))
+
+vi.mock('../services/communications', () => ({
+  listApplicationCommunications: vi.fn().mockResolvedValue([]),
+  createApplicationCommunication: vi.fn(),
 }))
 
 const mockedGetApplication = vi.mocked(getAdminApplication)
@@ -48,6 +57,13 @@ const adminUser: AuthUser = {
   name: 'Admin Uji',
   email: 'admin@example.test',
   role: 'admin',
+}
+
+const prodiUser: AuthUser = {
+  id: 10,
+  name: 'Prodi Uji',
+  email: 'prodi@example.test',
+  role: 'prodi',
 }
 
 const pendingApplication: InternshipApplication = {
@@ -73,6 +89,17 @@ const pendingApplication: InternshipApplication = {
   reviewer: null,
   acceptanceLetter: null,
   dpmPlacement: null,
+}
+
+const otherApplication: InternshipApplication = {
+  ...pendingApplication,
+  id: 12,
+  student: {
+    id: 8,
+    name: 'Budi Santoso',
+    email: 'budi.santoso@example.test',
+    role: 'mahasiswa',
+  },
 }
 
 const acceptedApplication: InternshipApplication = {
@@ -132,6 +159,19 @@ function createAuthValue(
   }
 }
 
+function RouteChanger() {
+  const navigate = useNavigate()
+
+  return (
+    <button
+      type="button"
+      onClick={() => navigate('/admin/pengajuan/12')}
+    >
+      Buka pengajuan 12
+    </button>
+  )
+}
+
 function renderRoute(
   path: string,
   auth: AuthContextValue = createAuthValue(),
@@ -139,6 +179,20 @@ function renderRoute(
   return render(
     <AuthContext.Provider value={auth}>
       <MemoryRouter initialEntries={[path]}>
+        <AppRoutes />
+      </MemoryRouter>
+    </AuthContext.Provider>,
+  )
+}
+
+function renderNavigableRoute(
+  path: string,
+  auth: AuthContextValue = createAuthValue(),
+) {
+  return render(
+    <AuthContext.Provider value={auth}>
+      <MemoryRouter initialEntries={[path]}>
+        <RouteChanger />
         <AppRoutes />
       </MemoryRouter>
     </AuthContext.Provider>,
@@ -169,6 +223,103 @@ describe('AdminApplicationDetailPage', () => {
     expect(screen.getByText('Memuat detail pengajuan...')).toBeTruthy()
   })
 
+  it('tidak menampilkan detail ID lama saat ID berubah tanpa unmount', async () => {
+    let resolveSecond: (application: InternshipApplication) => void = () => {}
+
+    mockedGetApplication
+      .mockResolvedValueOnce(pendingApplication)
+      .mockReturnValueOnce(
+        new Promise<InternshipApplication>((resolve) => {
+          resolveSecond = resolve
+        }),
+      )
+
+    renderNavigableRoute(
+      '/admin/pengajuan/11',
+      createAuthValue({ user: prodiUser }),
+    )
+
+    expect(await screen.findByText('Siti Rahma')).toBeTruthy()
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Buka pengajuan 12' }),
+    )
+
+    expect(screen.getByText('Memuat detail pengajuan...')).toBeTruthy()
+    expect(screen.queryByText('Siti Rahma')).toBeNull()
+
+    await act(async () => {
+      resolveSecond(otherApplication)
+    })
+
+    expect(await screen.findByText('Budi Santoso')).toBeTruthy()
+    expect(screen.queryByText('Siti Rahma')).toBeNull()
+  })
+
+  it('mengabaikan respons lama yang selesai setelah respons ID baru', async () => {
+    let resolveFirst: (application: InternshipApplication) => void = () => {}
+    let resolveSecond: (application: InternshipApplication) => void = () => {}
+
+    mockedGetApplication.mockImplementation(
+      (id) =>
+        new Promise<InternshipApplication>((resolve) => {
+          if (id === 11) {
+            resolveFirst = resolve
+          } else {
+            resolveSecond = resolve
+          }
+        }),
+    )
+
+    renderNavigableRoute('/admin/pengajuan/11')
+
+    await waitFor(() => {
+      expect(mockedGetApplication).toHaveBeenCalledWith(11)
+    })
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Buka pengajuan 12' }),
+    )
+
+    await waitFor(() => {
+      expect(mockedGetApplication).toHaveBeenCalledWith(12)
+    })
+
+    expect(screen.getByText('Memuat detail pengajuan...')).toBeTruthy()
+
+    await act(async () => {
+      resolveSecond(otherApplication)
+    })
+
+    expect(await screen.findByText('Budi Santoso')).toBeTruthy()
+
+    await act(async () => {
+      resolveFirst(pendingApplication)
+    })
+
+    expect(screen.getByText('Budi Santoso')).toBeTruthy()
+    expect(screen.queryByText('Siti Rahma')).toBeNull()
+  })
+
+  it('menampilkan error ID baru tanpa mempertahankan detail ID lama', async () => {
+    mockedGetApplication
+      .mockResolvedValueOnce(pendingApplication)
+      .mockRejectedValueOnce(new AxiosError('Network Error', 'ERR_NETWORK'))
+
+    renderNavigableRoute('/admin/pengajuan/11')
+
+    expect(await screen.findByText('Siti Rahma')).toBeTruthy()
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Buka pengajuan 12' }),
+    )
+
+    expect(
+      await screen.findByText(
+        'Tidak dapat terhubung ke backend. Periksa koneksi lalu coba lagi.',
+      ),
+    ).toBeTruthy()
+    expect(screen.queryByText('Siti Rahma')).toBeNull()
+  })
+
   it('menampilkan detail pengajuan dan form keputusan', async () => {
     mockedGetApplication.mockResolvedValue(pendingApplication)
 
@@ -177,6 +328,8 @@ describe('AdminApplicationDetailPage', () => {
     expect(await screen.findByText('Siti Rahma')).toBeTruthy()
     expect(screen.getByText('PT Maju')).toBeTruthy()
     expect(screen.getByText('Menunggu hasil seleksi mitra')).toBeTruthy()
+    expect(await screen.findByText('Komunikasi mitra')).toBeTruthy()
+    expect(screen.getByText('Catat komunikasi')).toBeTruthy()
     expect(screen.getByText('Catat keputusan')).toBeTruthy()
     expect(
       screen.getByRole('button', { name: 'Simpan keputusan' }),
@@ -346,6 +499,9 @@ describe('AdminApplicationDetailPage', () => {
     renderRoute('/admin/pengajuan/bukan-angka')
 
     expect(screen.getByText('Pengajuan tidak ditemukan.')).toBeTruthy()
+    expect(
+      screen.queryByRole('button', { name: 'Coba lagi' }),
+    ).toBeNull()
     expect(mockedGetApplication).not.toHaveBeenCalled()
   })
 

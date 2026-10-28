@@ -11,8 +11,10 @@ import {
 } from '../../lib/apiError'
 import { formatApplicationDate } from '../../lib/applications'
 import {
-  ACCEPTANCE_LETTER_ACCEPT_ATTRIBUTE,
+  ACCEPTANCE_LETTER_ALLOWED_MIME_TYPES,
   ACCEPTANCE_LETTER_MAX_BYTES,
+  acceptanceLetterAcceptAttribute,
+  acceptanceLetterFormatLabel,
   formatFileSize,
   saveBlob,
   validateAcceptanceLetterFile,
@@ -47,6 +49,9 @@ export function AcceptanceLetterPanel({
   const [maxSizeBytes, setMaxSizeBytes] = useState(
     ACCEPTANCE_LETTER_MAX_BYTES,
   )
+  const [allowedMimeTypes, setAllowedMimeTypes] = useState<string[]>(
+    ACCEPTANCE_LETTER_ALLOWED_MIME_TYPES,
+  )
 
   const letter = application.acceptanceLetter
   const canUpload =
@@ -62,8 +67,12 @@ export function AcceptanceLetterPanel({
     // this request fails; the server still validates every upload.
     getAcceptanceLetterLimit()
       .then((limit) => {
-        if (active) {
-          setMaxSizeBytes(limit.maxSizeBytes)
+        if (!active) return
+
+        setMaxSizeBytes(limit.maxSizeBytes)
+
+        if (limit.allowedMimeTypes.length > 0) {
+          setAllowedMimeTypes(limit.allowedMimeTypes)
         }
       })
       .catch(() => undefined)
@@ -94,6 +103,7 @@ export function AcceptanceLetterPanel({
     const validationError = validateAcceptanceLetterFile(
       selectedFile,
       maxSizeBytes,
+      allowedMimeTypes,
     )
 
     if (validationError !== null) {
@@ -245,7 +255,9 @@ export function AcceptanceLetterPanel({
             label="Berkas surat penerimaan"
             required
             error={fileError}
-            hint={`PDF, JPG, atau PNG. Maksimal ${formatFileSize(
+            hint={`${acceptanceLetterFormatLabel(
+              allowedMimeTypes,
+            )}. Maksimal ${formatFileSize(
               maxSizeBytes,
             )}. Berkas disimpan di penyimpanan privat dan hanya dapat diakses melalui autentikasi.`}
           >
@@ -253,7 +265,7 @@ export function AcceptanceLetterPanel({
               id={`acceptance-letter-file-${application.id}`}
               name="file"
               type="file"
-              accept={ACCEPTANCE_LETTER_ACCEPT_ATTRIBUTE}
+              accept={acceptanceLetterAcceptAttribute(allowedMimeTypes)}
               onChange={(event) => {
                 resetMessages()
                 setSelectedFile(event.target.files?.[0] ?? null)

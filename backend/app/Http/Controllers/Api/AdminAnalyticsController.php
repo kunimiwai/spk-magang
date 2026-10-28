@@ -7,6 +7,7 @@ use App\Exceptions\AlgorithmServiceException;
 use App\Http\Controllers\Controller;
 use App\Models\Criterion;
 use App\Models\Partner;
+use App\Models\SystemSetting;
 use App\Services\AlgorithmService;
 use App\Services\RecommendationService;
 use Illuminate\Http\JsonResponse;
@@ -183,7 +184,10 @@ class AdminAnalyticsController extends Controller
         }
 
         $featureIds = array_values(array_filter(
-            (array) config('recommendation.kmeans.feature_criterion_ids'),
+            (array) SystemSetting::get(
+                'recommendation.kmeans.feature_criterion_ids',
+                config('recommendation.kmeans.feature_criterion_ids'),
+            ),
             'is_numeric',
         ));
         $matrix = [];
@@ -214,13 +218,19 @@ class AdminAnalyticsController extends Controller
             $matrix[] = $row;
         }
 
-        $clusterCount = (int) config('recommendation.kmeans.cluster_count');
+        $clusterCount = (int) SystemSetting::get(
+            'recommendation.kmeans.cluster_count',
+            config('recommendation.kmeans.cluster_count'),
+        );
 
         try {
             $result = $algorithm->kmeans(
                 $matrix,
                 $clusterCount,
-                (int) config('recommendation.kmeans.random_seed'),
+                (int) SystemSetting::get(
+                    'recommendation.kmeans.random_seed',
+                    config('recommendation.kmeans.random_seed'),
+                ),
             );
         } catch (AlgorithmServiceException) {
             $analytics['service_error'] =

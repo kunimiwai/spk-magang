@@ -124,6 +124,30 @@ function normalizePartner(payload: unknown): ApplicationPartner | null {
   }
 }
 
+export function normalizePartnerList(
+  payload: unknown,
+): ApplicationPartner[] {
+  if (!Array.isArray(payload)) {
+    return []
+  }
+
+  const partners: ApplicationPartner[] = []
+  const seen = new Set<number>()
+
+  for (const entry of payload) {
+    const partner = normalizePartner(entry)
+
+    if (partner === null || seen.has(partner.id)) {
+      continue
+    }
+
+    seen.add(partner.id)
+    partners.push(partner)
+  }
+
+  return partners
+}
+
 function normalizePerson(payload: unknown): ApplicationPerson | null {
   const data = asRecord(payload)
   const id = positiveInteger(data.id)

@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import type { Partner } from '../../services/partners'
 import { deletePartner } from '../../services/partners'
-import { getApiErrorMessage } from '../../lib/apiError'
+import {
+  getApiErrorMessage,
+  getApiResponseMessage,
+} from '../../lib/apiError'
 import { Alert } from '../ui/Alert'
 import { Button } from '../ui/Button'
 import { Dialog } from '../ui/Dialog'
@@ -28,7 +31,13 @@ export function DeletePartnerDialog({
       await deletePartner(partner.id)
       onDeleted('Mitra magang berhasil dihapus.')
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, 'Mitra magang gagal dihapus. Coba lagi.'))
+      setError(
+        getApiResponseMessage(err) ??
+          getApiErrorMessage(
+            err,
+            'Mitra magang gagal dihapus. Coba lagi.',
+          ),
+      )
     } finally {
       setDeleting(false)
     }

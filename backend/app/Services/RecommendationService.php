@@ -5,8 +5,11 @@ namespace App\Services;
 use App\Enums\CriterionType;
 use App\Exceptions\AlgorithmServiceException;
 use App\Models\Criterion;
+use App\Models\KmeansRun;
+use App\Models\KmeansRunPartner;
 use App\Models\Partner;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class RecommendationService
@@ -448,6 +451,26 @@ class RecommendationService
                 'Analitik K-Means berhasil dihitung.',
                 'analysis',
             );
+        } else {
+            // Simpan histori K-Means ke database
+            $partnerIds = $partners->pluck('id')->toArray();
+            $this->storeKmeansRun(
+                (int) $kmeansSummary['cluster_count'],
+                (int) $kmeansSummary['random_seed'],
+                $kmeansSummary['iterations'] ?? 0,
+                (bool) $kmeansSummary['converged'],
+                $kmeansSummary['feature_criterion_ids'] ?? [],
+                $clusterLabels,
+                $partnerIds,
+            );
+
+            $checks[] = $this->check(
+                'kmeans_execution',
+                'Eksekusi analitik K-Means',
+                null,
+                'Analitik K-Means berhasil dihitung dan disimpan.',
+                'analysis',
+            );
         }
 
         // SAW ranks every mitra that has a complete score matrix. Cluster
@@ -540,7 +563,49 @@ class RecommendationService
      *     message: string
      * }
      */
-    private function check(
+
+
+    /**
+     * Simpan histori run K-Means beserta partner-label-nya dalam transaksi.
+     *
+     * @return KmeansRun
+     */
+    private function storeKmeansRun(
+        int $clusterCount,
+        int $randomSeed,
+        int $iterationCount,
+        bool $converged,
+        array $featureIds,
+        array $clusterLabels,
+        array $partnerIds,
+    ): KmeansRun {
+        return DB::transaction(function () use ($clusterCount, $randomSeed, $iterationCount, $converged, $featureIds, $clusterLabels, $partnerIds) {
+            $kmeansRun = KmeansRun::create([
+                "cluster_count" => $clusterCount,
+                "random_seed" => $randomSeed,
+                "iteration_count" => $iterationCount,
+                "inertia" => null,
+                "converged" => $converged,
+                "feature_criterion_ids" => $featureIds,
+                "metadata" => [],
+                "ran_at" => now(),
+            ]);
+
+            foreach ($clusterLabels as $partnerIndex => $label) {
+                $partnerId = $partnerIds[$partnerIndex] ?? null;
+
+                if ($partnerId !== null) {
+                    KmeansRunPartner::create([
+                        "kmeans_run_id" => $kmeansRun->id,
+                        "partner_id" => $partnerId,
+                        "cluster_label" => $label,
+                    ]);
+                }
+            }
+
+            return $kmeansRun;
+        });
+    }    private function check(
         string $key,
         string $label,
         ?string $issue,

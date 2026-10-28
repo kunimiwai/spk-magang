@@ -3,6 +3,7 @@ import {
   normalizeApplication,
   normalizeApplicationList,
   normalizeDpmOptionList,
+  normalizePartnerList,
   normalizePartnerOptionList,
 } from '../lib/applications'
 
@@ -129,6 +130,12 @@ export async function listStudentPartnerOptions(): Promise<PartnerOption[]> {
   )
 
   return normalizePartnerOptionList(unwrap(response))
+}
+
+export async function listStudentPartners(): Promise<ApplicationPartner[]> {
+  const response = await api.get<ApiEnvelope>('/mahasiswa/partners')
+
+  return normalizePartnerList(unwrap(response))
 }
 
 export async function uploadStudentAcceptanceLetter(
@@ -288,4 +295,16 @@ export async function listDpmApplications(): Promise<
   const response = await api.get<ApiEnvelope>('/dpm/applications')
 
   return normalizeApplicationList(unwrap(response))
+}
+
+/**
+ * Detail pengajuan yang ditugaskan kepada DPM yang sedang login. Backend
+ * mengembalikan 404 untuk pengajuan milik DPM lain.
+ */
+export async function getDpmApplication(
+  id: number,
+): Promise<InternshipApplication> {
+  const response = await api.get<ApiEnvelope>(`/dpm/applications/${id}`)
+
+  return requireApplication(unwrap(response))
 }

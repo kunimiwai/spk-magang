@@ -6,6 +6,7 @@ use App\Enums\ApplicationStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class InternshipApplication extends Model
@@ -60,5 +61,10 @@ class InternshipApplication extends Model
     public function dpmPlacement(): HasOne
     {
         return $this->hasOne(DpmPlacement::class);
+    }
+
+    public function communications(): HasMany
+    {
+        return $this->hasMany(ApplicationCommunication::class);
     }
 }

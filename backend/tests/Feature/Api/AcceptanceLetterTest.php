@@ -7,6 +7,7 @@ use App\Models\AcceptanceLetter;
 use App\Models\InternshipApplication;
 use App\Models\Partner;
 use App\Models\User;
+use App\Support\AcceptanceLetterRules;
 use App\Support\UploadLimit;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,11 +19,29 @@ class AcceptanceLetterTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const PDF_CONTENT = "%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n";
+
+    /**
+     * @var list<string>
+     */
+    private array $temporaryFiles = [];
+
     protected function setUp(): void
     {
         parent::setUp();
 
         Storage::fake('local');
+    }
+
+    protected function tearDown(): void
+    {
+        foreach ($this->temporaryFiles as $path) {
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+
+        parent::tearDown();
     }
 
     public function test_mahasiswa_can_upload_an_acceptance_letter_for_an_accepted_application(): void
@@ -82,6 +101,193 @@ class AcceptanceLetterTest extends TestCase
             'original_name' => 'surat-penerimaan.pdf',
             'mime_type' => 'application/pdf',
         ]);
+    }
+
+    public function test_upload_accepts_every_configured_mime_type(): void
+    {
+        $student = User::factory()->create(['role' => 'mahasiswa']);
+
+        foreach ([
+            ['name' => 'surat.pdf', 'mime' => 'application/pdf'],
+            ['name' => 'surat.jpg', 'mime' => 'image/jpeg'],
+            ['name' => 'surat.png', 'mime' => 'image/png'],
+        ] as $case) {
+            $application = $this->acceptedApplicationFor($student);
+
+            $this->actingAs($student, 'sanctum')
+                ->post(
+                    "/api/mahasiswa/applications/{$application->id}/acceptance-letter",
+                    [
+                        'file' => UploadedFile::fake()->create(
+                            $case['name'],
+                            50,
+                            $case['mime'],
+                        ),
+                    ],
+                )
+                ->assertCreated()
+                ->assertJsonPath(
+                    'data.acceptance_letter.mime_type',
+                    $case['mime'],
+                );
+        }
+
+        $this->assertDatabaseCount('acceptance_letters', 3);
+    }
+
+    public function test_upload_uses_the_configured_mime_allowlist(): void
+    {
+        config([
+            'internship.acceptance_letter.allowed_mime_types' => ['image/png'],
+        ]);
+
+        $student = User::factory()->create(['role' => 'mahasiswa']);
+        $application = $this->acceptedApplicationFor($student);
+
+        $this->actingAs($student, 'sanctum')
+            ->post(
+                "/api/mahasiswa/applications/{$application->id}/acceptance-letter",
+                [
+                    'file' => UploadedFile::fake()->create(
+                        'surat.pdf',
+                        50,
+                        'application/pdf',
+                    ),
+                ],
+            )
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['file']);
+
+        $this->actingAs($student, 'sanctum')
+            ->post(
+                "/api/mahasiswa/applications/{$application->id}/acceptance-letter",
+                [
+                    'file' => UploadedFile::fake()->create(
+                        'surat.png',
+                        50,
+                        'image/png',
+                    ),
+                ],
+            )
+            ->assertCreated();
+    }
+
+    public function test_empty_configured_allowlist_falls_back_to_safe_defaults(): void
+    {
+        config([
+            'internship.acceptance_letter.allowed_mime_types' => [],
+        ]);
+
+        $student = User::factory()->create(['role' => 'mahasiswa']);
+        $application = $this->acceptedApplicationFor($student);
+
+        $this->actingAs($student, 'sanctum')
+            ->getJson('/api/mahasiswa/acceptance-letter/limit')
+            ->assertOk()
+            ->assertJsonPath(
+                'data.allowed_mime_types',
+                AcceptanceLetterRules::DEFAULT_ALLOWED_MIME_TYPES,
+            );
+
+        $this->actingAs($student, 'sanctum')
+            ->post(
+                "/api/mahasiswa/applications/{$application->id}/acceptance-letter",
+                [
+                    'file' => UploadedFile::fake()->create(
+                        'surat.txt',
+                        50,
+                        'text/plain',
+                    ),
+                ],
+            )
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['file']);
+
+        $this->actingAs($student, 'sanctum')
+            ->post(
+                "/api/mahasiswa/applications/{$application->id}/acceptance-letter",
+                [
+                    'file' => UploadedFile::fake()->create(
+                        'surat.pdf',
+                        50,
+                        'application/pdf',
+                    ),
+                ],
+            )
+            ->assertCreated();
+    }
+
+    public function test_upload_detects_content_type_instead_of_trusting_the_filename_extension(): void
+    {
+        $student = User::factory()->create(['role' => 'mahasiswa']);
+        $application = $this->acceptedApplicationFor($student);
+        $file = $this->uploadedFileWithContent(
+            'surat-penerimaan.jpg',
+            self::PDF_CONTENT,
+        );
+
+        $this->actingAs($student, 'sanctum')
+            ->post(
+                "/api/mahasiswa/applications/{$application->id}/acceptance-letter",
+                ['file' => $file],
+            )
+            ->assertCreated()
+            ->assertJsonPath(
+                'data.acceptance_letter.original_name',
+                'surat-penerimaan.jpg',
+            )
+            ->assertJsonPath(
+                'data.acceptance_letter.mime_type',
+                'application/pdf',
+            );
+
+        $letter = $application->fresh()->acceptanceLetter;
+
+        $this->assertNotNull($letter);
+        $this->assertStringEndsWith('.pdf', $letter->path);
+        Storage::disk('local')->assertExists($letter->path);
+    }
+
+    public function test_upload_rejects_content_that_does_not_match_the_filename_extension(): void
+    {
+        $student = User::factory()->create(['role' => 'mahasiswa']);
+        $application = $this->acceptedApplicationFor($student);
+        $file = $this->uploadedFileWithContent(
+            'surat-penerimaan.pdf',
+            'Bukan berkas PDF.',
+        );
+
+        $this->actingAs($student, 'sanctum')
+            ->post(
+                "/api/mahasiswa/applications/{$application->id}/acceptance-letter",
+                ['file' => $file],
+            )
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['file']);
+
+        $this->assertDatabaseCount('acceptance_letters', 0);
+        $this->assertCount(0, Storage::disk('local')->allFiles());
+    }
+
+    public function test_upload_rejects_pdf_content_with_a_php_extension(): void
+    {
+        $student = User::factory()->create(['role' => 'mahasiswa']);
+        $application = $this->acceptedApplicationFor($student);
+        $file = $this->uploadedFileWithContent(
+            'surat-penerimaan.php',
+            self::PDF_CONTENT,
+        );
+
+        $this->actingAs($student, 'sanctum')
+            ->post(
+                "/api/mahasiswa/applications/{$application->id}/acceptance-letter",
+                ['file' => $file],
+            )
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['file']);
+
+        $this->assertDatabaseCount('acceptance_letters', 0);
+        $this->assertCount(0, Storage::disk('local')->allFiles());
     }
 
     public function test_letter_can_only_be_uploaded_for_an_accepted_application(): void
@@ -517,6 +723,22 @@ class AcceptanceLetterTest extends TestCase
             'internship_application_id' => $application->id,
             'uploaded_by' => $student->id,
         ]);
+    }
+
+    private function uploadedFileWithContent(
+        string $name,
+        string $content,
+    ): UploadedFile {
+        $path = tempnam(sys_get_temp_dir(), 'spk-acceptance-letter-');
+
+        if ($path === false) {
+            $this->fail('Temporary file could not be created.');
+        }
+
+        file_put_contents($path, $content);
+        $this->temporaryFiles[] = $path;
+
+        return new UploadedFile($path, $name, null, null, true);
     }
 
     private function acceptedApplicationFor(

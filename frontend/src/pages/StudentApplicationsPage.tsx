@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { ClipboardList, Send } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { ArrowRight, ClipboardList, Send } from 'lucide-react'
 import { useAuth } from '../auth/useAuth'
 import { AcceptanceLetterPanel } from '../components/applications/AcceptanceLetterPanel'
 import { ApplicationStatusBadge } from '../components/applications/ApplicationStatusBadge'
@@ -22,6 +23,7 @@ import { Field } from '../components/ui/Field'
 import { Select } from '../components/ui/Select'
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/States'
 import { getApiErrorMessage, getFieldErrors } from '../lib/apiError'
+import { buttonClasses } from '../lib/buttonStyles'
 import {
   formatApplicationDate,
   statusLabel,
@@ -46,6 +48,8 @@ type PartnerOptionsState =
 
 export default function StudentApplicationsPage() {
   const { user, isLoading: authLoading, logout } = useAuth()
+  const [searchParams] = useSearchParams()
+  const requestedPartnerId = searchParams.get('partner') ?? ''
 
   const [listState, setListState] = useState<ApplicationListState>({
     status: 'loading',
@@ -53,7 +57,9 @@ export default function StudentApplicationsPage() {
   const [optionsState, setOptionsState] = useState<PartnerOptionsState>({
     status: 'loading',
   })
-  const [selectedPartnerId, setSelectedPartnerId] = useState('')
+  const [selectedPartnerId, setSelectedPartnerId] = useState(
+    () => requestedPartnerId,
+  )
   const [fieldError, setFieldError] = useState('')
   const [formError, setFormError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
@@ -171,14 +177,21 @@ export default function StudentApplicationsPage() {
     try {
       const created = await createStudentApplication(partnerId)
 
-      setListState((current) =>
-        current.status === 'ready'
-          ? {
-              status: 'ready',
-              applications: [created, ...current.applications],
-            }
-          : { status: 'ready', applications: [created] },
-      )
+      if (listState.status === 'ready') {
+        setListState((current) =>
+          current.status === 'ready'
+            ? {
+                status: 'ready',
+                applications: [created, ...current.applications],
+              }
+            : current,
+        )
+      } else {
+        // The list was loading or failed. Reload it instead of replacing the
+        // state with only the new application, which would hide older rows.
+        setListState({ status: 'loading' })
+        setListReloadKey((current) => current + 1)
+      }
       setSelectedPartnerId('')
       setSuccessMessage(
         `Pengajuan berhasil dikirim dengan status ${statusLabel(created.status)}.`,
@@ -501,6 +514,22 @@ export default function StudentApplicationsPage() {
                               />
                             </>
                           )}
+
+                          <div className="mt-4 border-t border-border-subtle pt-3">
+                            <Link
+                              to={`/mahasiswa/pengajuan/${application.id}`}
+                              className={buttonClasses({
+                                variant: 'outline',
+                                size: 'sm',
+                              })}
+                            >
+                              Lihat detail pengajuan
+                              <ArrowRight
+                                className="size-4"
+                                aria-hidden="true"
+                              />
+                            </Link>
+                          </div>
                         </article>
                       </li>
                     ))}
