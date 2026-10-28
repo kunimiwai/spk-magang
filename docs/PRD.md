@@ -377,6 +377,8 @@ BPMN menggambarkan alur berikut. **D-004** menjadikan alur ini kandidat priorita
 | **D-003** | Mitra tidak memiliki akun aplikasi; komunikasi melalui email dan/atau surat | **DIKONFIRMASI** | Tidak ada portal/autentikasi mitra; kanal komunikasi email/surat | Pembuatan, pengiriman, penerimaan, pencatatan, tenggat, sumber kebenaran status (OD-020–OD-022) |
 | **D-004** | MVP memprioritaskan alur yang eksplisit di BPMN | **DIKONFIRMASI** | Alur BPMN menjadi prioritas; fitur tambahan tidak otomatis masuk MVP | Daftar fitur final, kebutuhan tambahan, dan definisi akhir proses (OD-006, OD-019, OD-029–OD-031) |
 
+> **Catatan pemetaan (OD-004):** OD-004 adalah keputusan login Admin/Prodi/DPM. Baris D-002 di atas, §3.1, dan `docs/REQUIREMENTS-TRACEABILITY.md` §2 masih memakai rentang OD-023–OD-025; referensi OD-004 dicatat di register. Anomali ini ditandai untuk sinkronisasi, bukan perubahan makna D-002.
+
 **Catatan:** D-001–D-004 tidak mengonfirmasi kebutuhan lain. Kebutuhan yang terkait tetap berstatus terbuka sampai keputusan lanjutan dibuat.
 
 ---

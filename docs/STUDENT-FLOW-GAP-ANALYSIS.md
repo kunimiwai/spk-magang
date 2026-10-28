@@ -1,23 +1,24 @@
 # Gap Analysis — Alur Mahasiswa SPK Magang
 
-**Tanggal:** 20 Oktober 2026
+**Tanggal:** 21 Oktober 2026
 **Status:** Sebagian alur belum dapat diimplementasikan karena keputusan produk masih terbuka.
-**Konteks:** Lanjutan dari `docs/CRITERIA-GAP-ANALYSIS.md` dan implementasi admin Mitra Magang.
+**Konteks:** Lanjutan dari `docs/CRITERIA-GAP-ANALYSIS.md`, implementasi admin Mitra Magang, serta modul pengajuan, surat penerimaan, dan penempatan DPM.
 
 ---
 
 ## 1. Ringkasan
 
 BPMN menempatkan mahasiswa pada alur login, pilih peminatan, input nilai mata
-kuliah prasyarat, melihat ranking, memilih mitra, dan mengajukan magang.
-Dokumentasi hanya menetapkan **label peminatan** dan **aktivitas input nilai**;
-detail data, validasi, penyimpanan, status, dan aturan pengajuan belum
-ditetapkan.
+kuliah prasyarat, melihat ranking, memilih mitra, mengajukan magang, mengunggah
+surat penerimaan setelah diterima, dan menerima penetapan DPM. Dokumentasi hanya
+menetapkan **label peminatan**, **aktivitas input nilai**, **aktivitas unggah
+surat penerimaan**, dan **penetapan DPM**; detail data, validasi, status,
+dokumen, dan aturan penugasan belum ditetapkan.
 
-Pekerjaan yang aman dan sudah diselesaikan pada tahap ini adalah **UI
-manajemen Mitra Magang untuk admin**, karena aturan CRUD dan kontrak API-nya
-sudah ada. Fitur mahasiswa yang membutuhkan skema atau aturan baru tidak
-dipaksakan.
+Pekerjaan yang aman dan sudah diselesaikan mencakup UI manajemen Mitra Magang,
+profil/peminatan, nilai akademik, pengajuan magang, surat penerimaan privat, dan
+penempatan DPM dari akun ber-role `dpm`. Fitur yang membutuhkan aturan baru
+tidak dipaksakan.
 
 ---
 
@@ -27,11 +28,13 @@ dipaksakan.
 |---|---|---|---|
 | Login mahasiswa | `FR-AUTH-01` sesuai BPMN; autentikasi teknis sudah ada | Login frontend/backend tersedia | Sudah tersedia |
 | Profil mahasiswa | Tidak ada di BPMN; `OD-006` belum diputuskan | Profil teknis hanya menampilkan nama, email, ID, role | Tidak; field profil belum ditetapkan |
-| Pilih peminatan DTA/PSI/SIA | Label peminatan eksplisit; penyimpanan, perubahan, multi-peminatan, dan pemetaan ke mitra terbuka (`OD-015`) | Belum ada | Belum; perlu keputusan model data |
-| Input nilai mata kuliah prasyarat | Aktivitas eksplisit; daftar mata kuliah, ambang nilai, sumber nilai, dan validasi terbuka (`OD-007`, `OD-008`) | Belum ada | Tidak; skema nilai belum ditetapkan |
-| Melihat rekomendasi/ranking | `FR-ALG-04`; kriteria, bobot, dan algoritma belum ditetapkan (`OD-009`–`OD-015`) | Belum ada | Tidak; terblokir audit kriteria |
-| Memilih perusahaan dan mengajukan magang | Aktivitas eksplisit; status, dokumen, batas pengajuan, dan alur revisi terbuka (`OD-016`–`OD-019`) | Belum ada | Tidak; state machine belum ditetapkan |
-| Menunggu hasil dan melihat rekomendasi lain | Alur eksplisit; aturan pengajuan ulang terbuka (`OD-018`) | Belum ada | Tidak |
+| Pilih peminatan DTA/PSI/SIA | Label peminatan eksplisit; penyimpanan, perubahan, multi-peminatan, dan pemetaan ke mitra terbuka (`OD-015`) | Struktur `student_peminatan`, endpoint profil, dan UI tersedia; penulisan bergantung mode `STUDENT_PEMINATAN_MODE` | Sebagian; kardinalitas dan aturan perubahan masih terbuka |
+| Input nilai mata kuliah prasyarat | Aktivitas eksplisit; daftar mata kuliah, ambang nilai, sumber nilai, dan validasi terbuka (`OD-007`, `OD-008`) | Master `courses`, nilai `student_grades`, API nilai milik sendiri, dan UI nilai tersedia; aturan prasyarat kosong | Sebagian; pencatatan aman, keputusan prasyarat belum ada |
+| Melihat rekomendasi/ranking | `FR-ALG-04`; kriteria, bobot, dan algoritma belum ditetapkan (`OD-009`–`OD-015`) | Integrasi generik dan status `not_ready` tersedia; ranking belum diaktifkan | Tidak; terblokir audit kriteria dan aturan prasyarat |
+| Memilih perusahaan dan mengajukan magang | Aktivitas eksplisit; status, dokumen, batas pengajuan, dan alur revisi terbuka (`OD-016`–`OD-019`) | API/UI pengajuan tersedia; status keputusan, surat, dan DPM tersedia sebagian | Sebagian; pengajuan ulang, verifikasi/revisi dokumen, dan lamaran ganda belum |
+| Menunggu hasil dan melihat rekomendasi lain | Alur eksplisit; aturan pengajuan ulang terbuka (`OD-018`) | Daftar/detail pengajuan dan status tersedia; loop rekomendasi/pengajuan ulang belum | Sebagian |
+| Mengunggah surat penerimaan | Aktivitas eksplisit; format, jumlah, dan revisi terbuka (`OD-017`) | Unggah/unduh privat untuk pengajuan `diterima`; satu surat; penggantian nonaktif | Sebagian |
+| Menerima penetapan DPM | Aktivitas eksplisit; kriteria, kewenangan, dan penggantian terbuka (`OD-023`–`OD-024`) | `admin`/`prodi` menetapkan satu akun ber-role `dpm`; mahasiswa melihat miliknya | Sebagian |
 
 ---
 
@@ -56,9 +59,10 @@ dipaksakan.
 - Apakah peminatan disimpan per mahasiswa atau per pengajuan?
 - Bagaimana pemetaan peminatan ke mitra?
 
-**Dampak:** endpoint pilihan peminatan belum dibuat karena aturan persistensi
-dan kardinalitas belum ditetapkan. Label `DTA`, `PSI`, dan `SIA` sudah tersedia
-di BPMN dan dapat dipakai setelah keputusan di atas disetujui.
+**Dampak:** tabel `student_peminatan`, endpoint, dan UI sudah tersedia, tetapi
+penulisan tetap ditolak (`409`) sampai mode `single`/`multiple` diisi. Label
+`DTA`, `PSI`, dan `SIA` sudah tersedia di BPMN. Pemetaan peminatan ke mitra
+belum diterapkan.
 
 ### 3.3 Nilai mata kuliah prasyarat
 
@@ -68,7 +72,12 @@ di BPMN dan dapat dipakai setelah keputusan di atas disetujui.
 - Aturan validasi dan penanganan nilai tidak lengkap.
 - Apakah nilai disimpan sebagai histori atau nilai terbaru saja.
 
-**Dampak:** tidak ada migration nilai atau validasi nilai pada tahap ini.
+**Dampak:** struktur `courses` dan `student_grades`, validasi teknis, API
+milik-sendiri, dan UI nilai sudah tersedia. Struktur yang dipakai saat ini
+adalah satu nilai terbaru per mahasiswa per mata kuliah, tanpa status
+lulus/tidak lulus, karena daftar prasyarat, skala, sumber, ambang, dan aturan
+histori belum ditetapkan. `config/academic.php` sengaja memuat aturan kosong;
+pemeriksaan prasyarat pada rekomendasi tetap terblokir.
 
 ### 3.4 Pengajuan magang
 
@@ -77,7 +86,21 @@ di BPMN dan dapat dipakai setelah keputusan di atas disetujui.
 - Batas pengajuan dan pengajuan ulang (`OD-018`, `OD-019`).
 - Apakah mahasiswa boleh melamar ke beberapa mitra sekaligus.
 
-**Dampak:** modul pengajuan belum dibuat.
+**Dampak:** modul pengajuan dibuat sebagian dengan status `menunggu`,
+`diterima`, dan `ditolak`, serta transisi `menunggu` → keputusan. Surat
+penerimaan disimpan privat untuk pengajuan `diterima` dan DPM dapat ditetapkan
+dari akun ber-role `dpm`. Status antara, verifikasi/revisi dokumen, reversal,
+penggantian DPM, dan batas lamaran ganda tetap terbuka.
+
+### 3.5 DPM
+
+- Kapan dan siapa yang berwenang menetapkan DPM (`OD-023`).
+- Kriteria penugasan, beban, persetujuan, dan penggantian (`OD-024`).
+- Kewenangan, cakupan bimbingan, dan komunikasi DPM (`OD-025`).
+
+**Dampak:** penempatan dasar untuk pengajuan `diterima` tersedia menggunakan
+akun `users` ber-role `dpm`. Tidak ada master dosen atau akun dummy; penggantian
+dan bimbingan belum diimplementasikan.
 
 ---
 
@@ -101,16 +124,29 @@ Alasan pemilihan:
 4. Menyelesaikan kesenjangan nyata: backend tersedia, tetapi belum ada UI
    terintegrasi.
 
+Tahap lanjutan menambahkan modul pengajuan magang dengan hanya status dan
+transisi yang eksplisit di BPMN: mahasiswa mengirim dan melihat pengajuan
+sendiri, sedangkan `admin`/`prodi` melihat semua pengajuan dan mencatat
+keputusan `diterima`/`ditolak` dari `menunggu`. Untuk pengajuan yang diterima,
+mahasiswa dapat mengunggah/mengunduh surat penerimaan dan `admin`/`prodi` dapat
+menetapkan DPM dari akun ber-role `dpm`. Format/revisi dokumen, penggantian
+DPM, dan fitur di luar itu tetap terbuka.
+
 ---
 
 ## 5. Urutan pekerjaan yang disarankan
 
 1. **Selesai:** CRUD backend dan UI admin Mitra Magang.
-2. Putuskan model profil dan peminatan mahasiswa, lalu implementasikan
-   penyimpanan serta validasinya.
-3. Putuskan daftar mata kuliah prasyarat, skala nilai, sumber data, dan aturan
-   validasi.
-4. Putuskan state machine pengajuan, dokumen, dan batas pengajuan.
+2. **Selesai sebagian:** struktur peminatan, endpoint profil, dan UI; keputusan
+   mode/kardinalitas masih menunggu OD-015.
+3. **Selesai sebagian:** master mata kuliah, pencatatan nilai milik sendiri, dan
+   pemeriksaan prasyarat yang tetap terblokir. Putuskan daftar mata kuliah
+   prasyarat, skala nilai, sumber data, dan aturan validasi (OD-007/OD-008).
+4. **Selesai sebagian:** pengajuan magang (kirim, daftar/detail milik sendiri,
+   daftar/detail admin-prodi, dan keputusan `menunggu` → `diterima`/`ditolak`),
+   surat penerimaan privat, dan penempatan DPM dasar. Putuskan status antara,
+   verifikasi/revisi dokumen, reversal, batas pengajuan, serta kriteria dan
+   penggantian DPM (OD-016–OD-024).
 5. Putuskan kriteria, bobot, benefit/cost, skala, dan normalisasi SAW
    (`docs/CRITERIA-GAP-ANALYSIS.md`).
 6. Implementasikan K-Means/SAW setelah kontrak data dan aturan tersedia.
@@ -123,7 +159,9 @@ Alasan pemilihan:
 |---|---|
 | UI admin Mitra Magang | Selesai dan terverifikasi; termasuk E2E browser untuk CRUD, pagination, dan role guard |
 | Profil mahasiswa | Ditunda — `OD-006` |
-| Peminatan | Ditunda — `OD-015` |
-| Nilai prasyarat | Ditunda — `OD-007`, `OD-008` |
-| Pengajuan magang | Ditunda — `OD-016`–`OD-019` |
+| Peminatan | Struktur/API/UI tersedia; penulisan menunggu mode `OD-015` |
+| Nilai prasyarat | Struktur/API/UI tersedia; aturan prasyarat menunggu `OD-007`, `OD-008` |
+| Pengajuan magang | Sebagian: kirim/daftar/detail dan keputusan BPMN tersedia; status antara, verifikasi/revisi dokumen, reversal, dan batas lamaran menunggu `OD-016`–`OD-021` |
+| Surat penerimaan | Sebagian: unggah/unduh privat untuk pengajuan diterima; format, jumlah, dan revisi menunggu `OD-017` |
+| Penempatan DPM | Sebagian: satu DPM dari akun ber-role `dpm`; kriteria, kewenangan, dan penggantian menunggu `OD-023`–`OD-024` |
 | Kriteria/SAW/K-Means | Ditunda — `docs/CRITERIA-GAP-ANALYSIS.md` |

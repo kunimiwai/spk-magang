@@ -39,6 +39,17 @@ pembuatan akun masih menunggu OD-004 dan OD-005 pada `docs/PRD.md`.
 | GET | `/api/admin/partners/{partner}` | `auth:sanctum` + role `admin` |
 | PUT/PATCH | `/api/admin/partners/{partner}` | `auth:sanctum` + role `admin` |
 | DELETE | `/api/admin/partners/{partner}` | `auth:sanctum` + role `admin` |
+| GET | `/api/admin/applications` | `auth:sanctum` + role `admin`/`prodi` |
+| GET | `/api/admin/applications/{application}` | `auth:sanctum` + role `admin`/`prodi` |
+| PATCH | `/api/admin/applications/{application}/status` | `auth:sanctum` + role `admin`/`prodi` |
+| GET | `/api/admin/applications/{application}/acceptance-letter` | `auth:sanctum` + role `admin`/`prodi` |
+| GET | `/api/admin/dpm-options` | `auth:sanctum` + role `admin`/`prodi` |
+| PUT | `/api/admin/applications/{application}/dpm` | `auth:sanctum` + role `admin`/`prodi` |
+| GET | `/api/mahasiswa/applications` | `auth:sanctum` + role `mahasiswa` |
+| POST | `/api/mahasiswa/applications` | `auth:sanctum` + role `mahasiswa` |
+| GET | `/api/mahasiswa/applications/{application}` | `auth:sanctum` + role `mahasiswa` |
+| POST | `/api/mahasiswa/applications/{application}/acceptance-letter` | `auth:sanctum` + role `mahasiswa` |
+| GET | `/api/mahasiswa/applications/{application}/acceptance-letter` | `auth:sanctum` + role `mahasiswa` |
 | GET | `/api/mahasiswa/access-check` | `auth:sanctum` + role `mahasiswa` |
 | GET | `/api/dpm/access-check` | `auth:sanctum` + role `dpm` |
 
@@ -59,13 +70,21 @@ CORS hanya mengizinkan origin dari `CORS_ALLOWED_ORIGINS`; jangan memakai
 wildcard origin. Feature test CORS mencakup origin yang diizinkan, preflight,
 dan origin yang ditolak.
 
+## Surat penerimaan dan DPM
+
+- Surat penerimaan hanya dapat diunggah untuk pengajuan `diterima` milik mahasiswa yang sedang login. File disimpan di disk privat `local` dengan nama yang dihasilkan server; nama asli hanya menjadi metadata.
+- Default teknis ada di `config/internship.php`: PDF/JPEG/PNG, maksimal 5 MB, satu surat per pengajuan, dan penggantian nonaktif. Format, jumlah, dan revisi dokumen tetap menunggu OD-017.
+- Kandidat DPM berasal dari akun `users` dengan role `dpm`. Penempatan hanya untuk pengajuan `diterima`, menggunakan FK `dpm_id`, dan penggantian nonaktif sampai OD-024 ditetapkan.
+- Unduhan surat selalu melalui endpoint terotorisasi; path/disk tidak diekspos di JSON dan tidak ada URL publik.
+
 ## Status
 
-Autentikasi, otorisasi dasar, health check, dan CRUD mitra magang tersedia.
+Autentikasi, otorisasi dasar, health check, CRUD mitra, kriteria, master mata kuliah, nilai akademik, pengajuan magang, surat penerimaan, penempatan DPM, dan integrasi rekomendasi tersedia sebagian. Modul lain tetap menunggu keputusan produk pada `docs/PRD.md` Bagian 8.
+
 CRUD mitra memakai atribut minimum (`name`, `address`, `contact`, `email`,
 `description`) karena atribut penilaian, pemetaan peminatan, status, kuota, dan
-kewenangan Prodi masih menunggu keputusan produk pada `docs/PRD.md` Bagian 8.
-Modul kriteria penilaian sudah diaudit tetapi belum diimplementasikan karena
-daftar kriteria, bobot, benefit/cost, skala, dan normalisasi belum ditetapkan.
-Rincian ada di `docs/CRITERIA-GAP-ANALYSIS.md`. Modul mahasiswa, pengajuan,
-dokumen, DPM, K-Means, SAW, dan rekomendasi belum diimplementasikan.
+kewenangan Prodi masih menunggu keputusan produk. Status antara pengajuan,
+verifikasi dokumen, penerusan ke mitra, reversal, dan pengajuan ulang belum
+diimplementasikan. Rincian ada di `docs/CRITERIA-GAP-ANALYSIS.md`,
+`docs/STUDENT-FLOW-GAP-ANALYSIS.md`, dan
+`docs/REQUIREMENTS-TRACEABILITY.md`.

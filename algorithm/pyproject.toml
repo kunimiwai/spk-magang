@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spk-magang-algorithm"
+version = "0.1.0"
+description = "Generic K-Means and SAW functions and FastAPI service for SPK Magang."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115,<1.0",
+    "pydantic>=2.7,<3",
+    "uvicorn>=0.30,<1.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "httpx2>=2,<3",
+]
+
+[tool.setuptools]
+packages = ["spk_algorithm", "spk_service"]

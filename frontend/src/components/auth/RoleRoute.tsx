@@ -15,7 +15,7 @@ import {
 import { AuthLoadingScreen } from './AuthLoadingScreen'
 
 type RoleRouteProps = {
-  allowedRoles: string[]
+  allowedRoles: readonly string[]
   children: ReactNode
 }
 

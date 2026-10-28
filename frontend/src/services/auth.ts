@@ -25,6 +25,16 @@ type MeResponse = {
   }
 }
 
+type RegisterResponse = {
+  success: boolean
+  message: string
+}
+
+type PasswordResetResponse = {
+  success: boolean
+  message: string
+}
+
 export async function login(
   email: string,
   password: string,
@@ -53,4 +63,34 @@ export async function logout(): Promise<void> {
   } finally {
     clearAuthToken()
   }
+}
+
+export async function register(values: {
+  name: string
+  email: string
+  password: string
+  password_confirmation: string
+}): Promise<RegisterResponse> {
+  const response = await api.post<RegisterResponse>('/auth/register', values)
+
+  return response.data
+}
+
+export async function forgotPassword(email: string): Promise<PasswordResetResponse> {
+  const response = await api.post<PasswordResetResponse>('/password/email', {
+    email,
+  })
+
+  return response.data
+}
+
+export async function resetPassword(values: {
+  email: string
+  token: string
+  password: string
+  password_confirmation: string
+}): Promise<PasswordResetResponse> {
+  const response = await api.post<PasswordResetResponse>('/password/reset', values)
+
+  return response.data
 }
