@@ -1,0 +1,17 @@
+{
+  "name": "spk-magang",
+  "version": "2.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @spk/web --filter @spk/api dev",
+    "dev:web": "pnpm --filter @spk/web dev",
+    "dev:api": "pnpm --filter @spk/api dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "db:generate": "pnpm --filter @spk/api db:generate",
+    "db:migrate": "pnpm --filter @spk/api db:migrate",
+    "db:seed": "pnpm --filter @spk/api db:seed"
+  }
+}
